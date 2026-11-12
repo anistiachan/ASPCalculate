@@ -4,11 +4,14 @@ import type { MeasurementPosition, Sex } from "./child.types"
 export type StoredChild = {
   id: string
   /**
-   * NIK, disimpan lokal semata-mata supaya import ulang file yang sama dapat
-   * mengenali anak yang sudah ada tanpa menggandakannya. Jangan ditampilkan di
-   * UI publik, log, atau ekspor tanpa kebutuhan yang jelas.
+   * NIK. Opsional: anak yang ditambah manual boleh tanpa NIK. Disimpan lokal untuk
+   * mengenali anak yang sama saat import ulang tanpa menggandakannya. Jangan
+   * ditampilkan penuh di UI, log, atau ekspor tanpa kebutuhan yang jelas.
+   *
+   * Nilai `null` tidak diindeks IndexedDB, sehingga indeks unik hanya berlaku bagi
+   * anak yang punya NIK dan beberapa anak tanpa NIK tidak saling bentrok.
    */
-  sourceKey: string
+  sourceKey: string | null
   name: string
   birthDate: string
   sex: Sex
@@ -16,8 +19,10 @@ export type StoredChild = {
   birthWeightKg: number | null
   birthLengthCm: number | null
   birthHeadCircumferenceCm: number | null
-  importBatchId: string
+  /** null jika dibuat manual di aplikasi. */
+  importBatchId: string | null
   createdAt: string
+  updatedAt?: string
 }
 
 export type StoredMeasurement = {
@@ -37,10 +42,12 @@ export type StoredMeasurement = {
   motherToddlerClassAttendance: boolean | null
   mbgStatus: boolean | null
   rowNote: string | null
-  sourceSheet: string
-  sourceRow: number
-  importBatchId: string
+  /** null jika dicatat manual di aplikasi. */
+  sourceSheet: string | null
+  sourceRow: number | null
+  importBatchId: string | null
   createdAt: string
+  updatedAt?: string
 }
 
 export type StoredImportBatch = {

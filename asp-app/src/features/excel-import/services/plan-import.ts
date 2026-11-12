@@ -106,9 +106,11 @@ export function planImport(
     measurementsSkippedChildConflict: 0,
   }
 
-  const childByKey = new Map(
-    existing.children.map((child) => [child.sourceKey, child])
-  )
+  // Anak yang ditambah manual tanpa NIK tidak bisa dicocokkan dari file, jadi dilewati.
+  const childByKey = new Map<string, StoredChild>()
+  for (const child of existing.children) {
+    if (child.sourceKey !== null) childByKey.set(child.sourceKey, child)
+  }
   const conflictedKeys = new Set<string>()
   const newChildren: StoredChild[] = []
 
@@ -129,7 +131,7 @@ export function planImport(
         createdAt: options.now,
       }
       newChildren.push(stored)
-      childByKey.set(stored.sourceKey, stored)
+      childByKey.set(incoming.sourceKey, stored)
       summary.childrenNew++
     } else if (sameChild(incoming, current)) {
       summary.childrenUnchanged++
