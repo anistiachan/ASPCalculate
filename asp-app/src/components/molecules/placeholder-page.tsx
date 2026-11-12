@@ -1,3 +1,4 @@
+import { PageHeader } from "@/components/molecules/page-header"
 import { Badge } from "@/components/ui/badge"
 import {
   Card,
@@ -12,16 +13,16 @@ type PlaceholderPageProps = {
   item: NavItem
 }
 
-/** Isi sementara halaman yang belum diimplementasikan (Phase 0). */
+/** Isi sementara halaman yang belum diimplementasikan. */
 export function PlaceholderPage({ item }: PlaceholderPageProps) {
   return (
-    <div className="mx-auto w-full max-w-3xl space-y-4">
-      <h1 className="text-2xl font-semibold tracking-tight">{item.title}</h1>
+    <div className="mx-auto w-full max-w-4xl space-y-6">
+      <PageHeader item={item} />
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             Belum tersedia
-            <Badge variant="secondary">{item.plannedPhase}</Badge>
+            <Badge variant="warning">{item.plannedPhase}</Badge>
           </CardTitle>
           <CardDescription>{item.description}</CardDescription>
         </CardHeader>

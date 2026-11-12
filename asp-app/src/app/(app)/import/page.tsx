@@ -1,10 +1,19 @@
 import type { Metadata } from "next"
 
-import { PlaceholderPage } from "@/components/molecules/placeholder-page"
+import { PageHeader } from "@/components/molecules/page-header"
+import { ImportWizard } from "@/features/excel-import/components/import-wizard"
 import { getNavItem } from "@/lib/constants/navigation"
 
 export const metadata: Metadata = { title: "Import Excel" }
 
 export default function ImportPage() {
-  return <PlaceholderPage item={getNavItem("/import")} />
+  return (
+    <div className="mx-auto w-full max-w-4xl space-y-6">
+      <PageHeader
+        item={getNavItem("/import")}
+        description="Pilih file, tinjau pratinjau dan catatannya, lalu konfirmasi untuk menyimpan."
+      />
+      <ImportWizard />
+    </div>
+  )
 }

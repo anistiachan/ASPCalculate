@@ -11,7 +11,7 @@ export default function AppLayout({ children }: LayoutProps<"/">) {
     <SidebarProvider>
       <AppSidebar />
       <SidebarInset>
-        <header className="flex h-14 shrink-0 items-center gap-2 border-b px-4">
+        <header className="flex h-14 shrink-0 items-center gap-2 border-b bg-card px-4">
           <SidebarTrigger aria-label="Buka atau tutup menu" />
           <Separator orientation="vertical" className="h-4" />
           <span className="text-sm text-muted-foreground">

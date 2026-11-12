@@ -1,17 +1,28 @@
 import type { Metadata } from "next"
-import { Geist, Geist_Mono } from "next/font/google"
+import { Fredoka, Nunito, Space_Mono } from "next/font/google"
 
 import { TooltipProvider } from "@/components/ui/tooltip"
 import "./globals.css"
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+// Font yang bersahabat tetapi tetap mudah dibaca semua usia:
+// - Teks isi dan kontrol: Nunito (ujung huruf membulat, hangat, jelas di ukuran kecil).
+// - Judul dan angka besar: Fredoka (bulat dan ceria).
+// - Label kapital: Space Mono (skill docs/design/skill.md).
+// Alasan menyimpang dari Noto Serif Display di skill ada di globals.css.
+const nunito = Nunito({
+  variable: "--font-nunito",
   subsets: ["latin"],
 })
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const fredoka = Fredoka({
+  variable: "--font-fredoka",
   subsets: ["latin"],
+})
+
+const spaceMono = Space_Mono({
+  variable: "--font-space-mono",
+  subsets: ["latin"],
+  weight: ["400", "700"],
 })
 
 export const metadata: Metadata = {
@@ -27,7 +38,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="id"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${nunito.variable} ${fredoka.variable} ${spaceMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
         <TooltipProvider>{children}</TooltipProvider>
