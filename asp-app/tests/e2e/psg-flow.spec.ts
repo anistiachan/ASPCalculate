@@ -88,7 +88,7 @@ test.describe("PSG → status → ukur ulang → rekap P1", () => {
     expect(typeof sheet["N9"].v).toBe("number")
     expect(sheet["C10"].v).toBe("Anak PSG B")
     expect(sheet["Q10"].v).toBe("Pendek")
-    expect(sheet["U10"].v).toBe("YA")
+    expect(sheet["AH10"].v).toBe("YA")
     expect(sheet["Q11"].v).toBe("Sangat pendek")
   })
 
@@ -146,17 +146,17 @@ test.describe("PSG → status → ukur ulang → rekap P1", () => {
     // Urutan: JERUK (A, B) lalu PEPAYA (C, D), mulai baris 9.
     expect(sheet["C9"].v).toBe("Anak PSG A")
     expect(sheet["Q9"].v).toBe("Normal")
-    expect(sheet["U9"]).toBeUndefined()
+    expect(sheet["AH9"]).toBeUndefined()
 
     expect(sheet["C10"].v).toBe("Anak PSG B")
     expect(sheet["Q10"].v).toBe("Pendek")
     expect(typeof sheet["N10"].v).toBe("number")
-    expect(sheet["U10"].v).toBe("YA")
+    expect(sheet["AH10"].v).toBe("YA")
     expect(sheet["AI10"].v).toContain("TB/U: Pendek")
 
     expect(sheet["C11"].v).toBe("Anak PSG C")
     expect(sheet["Q11"].v).toBe("Sangat pendek")
-    expect(sheet["U11"].v).toBe("YA")
+    expect(sheet["AH11"].v).toBe("YA")
   })
 
   test("daftar ukur ulang diunduh, diisi petugas, diimpor lagi, lalu masuk rekap P1", async ({

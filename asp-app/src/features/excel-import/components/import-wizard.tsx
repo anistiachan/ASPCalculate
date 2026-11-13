@@ -153,9 +153,9 @@ export function ImportWizard() {
               fileName="template-psg.xlsx"
               build={async () => {
                 // Berkas statis bergaya dari public/; tidak memuat data apa pun.
-                const response = await fetch("/templates/template-psg.xlsx")
-                if (!response.ok) throw new Error("Template tidak ditemukan.")
-                return new Uint8Array(await response.arrayBuffer())
+                const { fetchPsgTemplate } =
+                  await import("@/infrastructure/excel/psg-template-source")
+                return fetchPsgTemplate()
               }}
             />
             <ExportWorkbookButton

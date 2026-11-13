@@ -244,6 +244,8 @@ function ResultsBody({
             build={async () => {
               const { buildPsgWorkbook } =
                 await import("@/infrastructure/excel/psg-workbook")
+              const { fetchPsgTemplate } =
+                await import("@/infrastructure/excel/psg-template-source")
               return buildPsgWorkbook(
                 month,
                 status,
@@ -251,7 +253,8 @@ function ResultsBody({
                   generatedOn: todayIso(),
                   validated: ANTHROPOMETRY_VALIDATED_BY_HEALTH_PROFESSIONAL,
                 },
-                recheck
+                recheck,
+                await fetchPsgTemplate()
               )
             }}
           />

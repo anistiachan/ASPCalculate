@@ -260,6 +260,8 @@ function ListSections({
               build={async () => {
                 const { buildPsgWorkbook } =
                   await import("@/infrastructure/excel/psg-workbook")
+                const { fetchPsgTemplate } =
+                  await import("@/infrastructure/excel/psg-template-source")
                 return buildPsgWorkbook(
                   month,
                   lists.status,
@@ -268,7 +270,8 @@ function ListSections({
                     scope: posyandu ?? undefined,
                     validated: ANTHROPOMETRY_VALIDATED_BY_HEALTH_PROFESSIONAL,
                   },
-                  lists.recheck
+                  lists.recheck,
+                  await fetchPsgTemplate()
                 )
               }}
             />

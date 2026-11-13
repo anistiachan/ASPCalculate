@@ -93,7 +93,7 @@ function buildPsgSheet(workbook, { title, rows, banner }) {
     O: 10,
     P: 10,
     Q: 16,
-    R: 16,
+    R: 22,
     S: 16,
     T: 8,
     U: 8,

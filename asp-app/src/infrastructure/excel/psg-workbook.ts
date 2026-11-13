@@ -1,4 +1,4 @@
-import * as XLSX from "xlsx"
+import type { Buffer as ExcelBuffer, Cell, Worksheet } from "exceljs"
 
 import {
   CATEGORY_LABELS,
@@ -16,7 +16,6 @@ import { columnIndex } from "@/features/excel-import/adapters/karangtawar/layout
 import {
   PSG_COLUMNS,
   PSG_FIRST_DATA_ROW,
-  PSG_HEADER_ROW,
   PSG_SHEET_NAME,
 } from "@/features/excel-import/adapters/psg/layout"
 import { formatMonth } from "@/lib/format/format"
@@ -29,11 +28,11 @@ export type PsgWorkbookMeta = {
 }
 
 /**
- * Kolom hasil hitungan di luar kolom masukan (C–M, AG) yang sudah didefinisikan adapter PSG.
- * Posisinya sama dengan sheet PSG workbook ASP, jadi berkas ini juga dikenali adapter PSG.
+ * Kolom hasil hitungan di luar kolom masukan (C–M, AG) yang didefinisikan adapter PSG. Posisinya
+ * sama dengan template PSG, jadi berkas hasil ini juga dikenali adapter PSG. Kolom V–AF
+ * disembunyikan oleh template; kolom tambahan diletakkan di kanan POSY (AG).
  */
 const OUT = {
-  no: "B",
   umur: "K",
   zHaz: "N",
   zWaz: "O",
@@ -41,27 +40,34 @@ const OUT = {
   statusHaz: "Q",
   statusWaz: "R",
   statusWhz: "S",
-  imt: "T",
-  recheck: "U",
+  imt: "U",
+  recheck: "AH",
   note: "AI",
 } as const
 
-/** Kolom penanda (1/0) sheet PSG: PDK, S.PDK, BGM, KRS, S.KRS, GMK, MSL, CALON, BBK. */
+/** Kolom penanda (1/0) PDK, S.PDK, BGM, KRS, S.KRS, GMK, MSL, CALON, BBK, di kanan KETERANGAN. */
 export const PSG_FLAG_COLUMNS: readonly {
   header: string
   column: string
   flag: keyof StatusFlags
 }[] = [
-  { header: "PDK", column: "W", flag: "PENDEK" },
-  { header: "S.PDK", column: "X", flag: "SANGAT_PENDEK" },
-  { header: "BGM", column: "Y", flag: "BGM" },
-  { header: "KRS", column: "Z", flag: "KURUS" },
-  { header: "S.KRS", column: "AA", flag: "SANGAT_KURUS" },
-  { header: "GMK", column: "AB", flag: "GEMUK" },
-  { header: "MSL", column: "AC", flag: "BERMASALAH" },
-  { header: "CALON", column: "AD", flag: "CALON_KURUS" },
-  { header: "BBK", column: "AH", flag: "BBK" },
+  { header: "PDK", column: "AJ", flag: "PENDEK" },
+  { header: "S.PDK", column: "AK", flag: "SANGAT_PENDEK" },
+  { header: "BGM", column: "AL", flag: "BGM" },
+  { header: "KRS", column: "AM", flag: "KURUS" },
+  { header: "S.KRS", column: "AN", flag: "SANGAT_KURUS" },
+  { header: "GMK", column: "AO", flag: "GEMUK" },
+  { header: "MSL", column: "AP", flag: "BERMASALAH" },
+  { header: "CALON", column: "AQ", flag: "CALON_KURUS" },
+  { header: "BBK", column: "AR", flag: "BBK" },
 ]
+
+/** Warna penanda: baris yang perlu perhatian dan teks status yang tidak normal. */
+const ATTENTION_FILL = "FFFFC7CE"
+const ABNORMAL_TEXT = "FFC00000"
+
+/** Jumlah baris isian yang sudah disediakan (berborder dan berwarna) oleh template. */
+const TEMPLATE_ROWS = 100
 
 const label = (key: NutritionCategory | null) =>
   key === null ? "" : CATEGORY_LABELS[key]
@@ -75,6 +81,9 @@ function bmi(entry: ListedChild): number | null {
   return round(entry.weightKg / (entry.heightCm / 100) ** 2, 1)
 }
 
+const isNormal = (category: NutritionCategory | null) =>
+  category === null || NORMAL_CATEGORIES.has(category)
+
 /** Penjelasan status yang tidak normal untuk satu anak, mis. "TB/U: Pendek (z -2,30)". */
 function abnormalStatuses(entry: ListedChild): string[] {
   const parts: [string, NutritionCategory | null, number | null][] = [
@@ -83,54 +92,64 @@ function abnormalStatuses(entry: ListedChild): string[] {
     ["BB/TB", entry.whzCategory, entry.whz],
   ]
   return parts
-    .filter(
-      ([, category]) => category !== null && !NORMAL_CATEGORIES.has(category)
-    )
+    .filter(([, category]) => !isNormal(category))
     .map(([name, category, z]) => {
       const zText = z === null ? "" : ` (z ${z.toFixed(2).replace(".", ",")})`
       return `${name}: ${label(category)}${zText}`
     })
 }
 
-type Cell = XLSX.CellObject
-const text = (value: string): Cell => ({ t: "s", v: value })
-const num = (value: number): Cell => ({ t: "n", v: value })
-
-function put(
-  sheet: XLSX.WorkSheet,
-  letters: string,
-  row: number,
-  cell: Cell | null
-): void {
-  if (cell === null) return
-  sheet[XLSX.utils.encode_cell({ r: row - 1, c: columnIndex(letters) })] = cell
+async function loadExcelJs() {
+  const loaded = await import("exceljs")
+  return (loaded as { default?: typeof import("exceljs") }).default ?? loaded
 }
 
-const numOrNull = (value: number | null): Cell | null =>
-  value === null ? null : num(value)
+/** Menyalin gaya satu sel ke sel lain. */
+function copyStyle(from: Cell, to: Cell): void {
+  to.style = { ...from.style }
+}
 
 /**
- * Berkas Excel berformat sheet PSG workbook ASP ("Penentuan status gizi"): kolom masukan
- * (nama, jenis kelamin, tanggal timbang dan lahir, BB, TB) diisi dari data, lalu sistem mengisi
- * umur, tiga z-score, tiga status, IMT, dan penanda PDK/BGM/dst. Kolom "PERLU DICEK" dan
- * "KETERANGAN" memberi tahu anak yang statusnya tidak normal atau datanya dicurigai salah
- * (mis. TB 814 cm), supaya bisa diukur ulang lalu diperbarui lewat daftar ukur ulang.
+ * Gaya sel yang dimuat dari berkas dipakai BERSAMA oleh semua sel yang gayanya sama, sehingga
+ * mengubah warna satu sel akan ikut mengubah sel lain. Beri sel ini salinan gaya sendiri sebelum
+ * mengubahnya.
+ */
+function own(cell: Cell): Cell {
+  cell.style = { ...cell.style }
+  return cell
+}
+
+/**
+ * Berkas Excel hasil pemeriksaan berformat sheet PSG, dibuat dengan MENGISI berkas template PSG
+ * (`template`), sehingga tampilannya (pita judul, header hijau, kolom berwarna) sama dengan
+ * template. Kolom masukan (nama, jenis kelamin, tanggal timbang dan lahir, BB, TB, Posyandu)
+ * diisi dari data, lalu OpenASP mengisi umur, tiga z-score, tiga status, dan IMT.
+ *
+ * Di kanan POSY ada kolom PERLU DICEK dan KETERANGAN untuk anak yang statusnya tidak normal atau
+ * datanya dicurigai salah (mis. TB 814 cm), lalu penanda 1/0 PDK/BGM/dst. dengan ringkasan JML
+ * dan persen. Baris anak yang perlu perhatian dan status yang tidak normal diberi warna merah.
  *
  * Status gizi dihitung mesin WHO 2006 + Permenkes 2/2020, BUKAN tabel PSG workbook; angka di
  * dekat batas bisa berbeda tipis. Berkas memuat NAMA dan TANGGAL LAHIR anak (data pribadi).
- * Nama ditulis sebagai sel teks bertipe string, bukan rumus.
  */
-export function buildPsgWorkbook(
+export async function buildPsgWorkbook(
   month: string,
   status: StatusLists,
   meta: PsgWorkbookMeta,
-  recheck: readonly RecheckEntry[] = []
-): Uint8Array {
+  recheck: readonly RecheckEntry[],
+  template: Uint8Array
+): Promise<Uint8Array> {
+  const ExcelJS = await loadExcelJs()
+  const workbook = new ExcelJS.Workbook()
+  await workbook.xlsx.load(template as unknown as ExcelBuffer)
+  const sheet = workbook.getWorksheet(PSG_SHEET_NAME)
+  if (!sheet) throw new Error("Template PSG tidak memuat sheet PSG.")
+  const instructions = workbook.getWorksheet("Petunjuk")
+  if (instructions) workbook.removeWorksheet(instructions.id)
+
   const entries = status.all
-  const flagsOf = entries.map((entry) => statusFlagsOf(entry))
   const total = entries.length
-  const count = (flag: keyof StatusFlags) =>
-    flagsOf.filter((flags) => flags[flag]).length
+  const flagsOf = entries.map((entry) => statusFlagsOf(entry))
   const reasonsByChild = new Map(
     recheck.map((entry) => [
       entry.childId,
@@ -138,100 +157,106 @@ export function buildPsgWorkbook(
     ])
   )
 
-  const sheet: XLSX.WorkSheet = {}
-  const lines = [
-    "PENENTUAN STATUS GIZI (format sheet PSG, dihitung OpenASP)",
-    `Periode: ${formatMonth(month)} · Posyandu: ${meta.scope ?? "Semua Posyandu"} · Dibuat: ${meta.generatedOn}`,
+  // Judul: tiga baris pita biru dan satu baris keterangan, sama seperti template.
+  sheet.getCell("B2").value =
+    `HASIL PEMERIKSAAN STATUS GIZI · ${formatMonth(month)}`
+  sheet.getCell("B3").value =
+    `${meta.scope ?? "Semua Posyandu"} · dibuat ${meta.generatedOn} · WHO 2006 dan Permenkes 2/2020 (OpenASP)`
+  const hint = sheet.getCell("B4")
+  hint.value = [
     "PERHATIAN: berkas ini memuat nama dan tanggal lahir anak. Simpan dan bagikan hanya kepada petugas yang berkepentingan.",
     meta.validated
       ? "Mesin antropometri telah ditinjau tenaga kesehatan."
-      : "PERHATIAN: status gizi belum divalidasi tenaga kesehatan dan tidak boleh dipakai untuk keputusan layanan gizi. Memakai WHO 2006 dan Permenkes 2/2020, bukan tabel bawaan workbook ASP.",
-  ]
-  lines.forEach((line, index) => put(sheet, "B", index + 1, text(line)))
+      : "Status gizi belum divalidasi tenaga kesehatan dan tidak boleh dipakai untuk keputusan layanan gizi. Baris merah perlu diukur ulang atau dicek.",
+  ].join("\n")
+  own(hint).alignment = {
+    horizontal: "center",
+    vertical: "middle",
+    wrapText: true,
+  }
+  sheet.getRow(4).height = 40
 
-  // Ringkasan jumlah dan persen di atas kolom penanda.
-  put(sheet, "V", 4, text("JML"))
-  put(sheet, "V", 5, text("%"))
-  for (const column of PSG_FLAG_COLUMNS) {
-    put(sheet, column.column, 4, num(count(column.flag)))
-    put(
-      sheet,
-      column.column,
-      5,
-      num(total === 0 ? 0 : round((count(column.flag) * 100) / total, 1)!)
-    )
+  // Baris data: template menyediakan 100 baris; kelebihannya meniru gaya baris pertama,
+  // dan baris yang tidak terpakai dibuang agar tidak ada nomor urut tanpa anak.
+  const lastStyledColumn = columnIndex("AG") + 1
+  for (let index = TEMPLATE_ROWS; index < total; index++) {
+    const row = PSG_FIRST_DATA_ROW + index
+    for (let c = 1; c <= lastStyledColumn; c++) {
+      copyStyle(sheet.getCell(PSG_FIRST_DATA_ROW, c), sheet.getCell(row, c))
+    }
+    sheet.getCell(`B${row}`).value = index + 1
+  }
+  // Baris bawaan template yang tidak terpakai dikosongkan (nilai dan gaya), bukan dibuang dengan
+  // spliceRows yang tidak andal untuk jumlah baris besar. Tanpa anak, satu baris kosong tetap ada.
+  for (
+    let row = PSG_FIRST_DATA_ROW + Math.max(total, 1);
+    row < PSG_FIRST_DATA_ROW + TEMPLATE_ROWS;
+    row++
+  ) {
+    for (let c = 1; c <= lastStyledColumn; c++) {
+      const cell = sheet.getCell(row, c)
+      cell.value = null
+      cell.style = {}
+    }
   }
 
-  // Judul kolom (baris 6 dan 7), sama dengan sheet PSG workbook.
-  const head = PSG_HEADER_ROW
-  const sub = head + 1
-  const headers: [string, number, string][] = [
-    [OUT.no, head, "NO"],
-    [PSG_COLUMNS.name, head, "NAMA"],
-    [PSG_COLUMNS.sex, head, "Sex"],
-    [PSG_COLUMNS.sex, sub, "L=1,P=2"],
-    [PSG_COLUMNS.measureDay, head, "Tg.Timbang"],
-    [PSG_COLUMNS.measureDay, sub, "Tg"],
-    [PSG_COLUMNS.measureMonth, sub, "Bln"],
-    [PSG_COLUMNS.measureYear, sub, "Thn"],
-    [PSG_COLUMNS.birthDay, head, "Tgl.Lahir"],
-    [PSG_COLUMNS.birthDay, sub, "Tg"],
-    [PSG_COLUMNS.birthMonth, sub, "Bln"],
-    [PSG_COLUMNS.birthYear, sub, "Thn"],
-    [OUT.umur, head, "Umur"],
-    [OUT.umur, sub, "( Bln )"],
-    [PSG_COLUMNS.weightKg, head, "BB"],
-    [PSG_COLUMNS.weightKg, sub, "( Kg )"],
-    [PSG_COLUMNS.heightCm, head, "TB"],
-    [PSG_COLUMNS.heightCm, sub, "( Cm )"],
-    [OUT.zHaz, head, "NILAI Z_SCORE"],
-    [OUT.zHaz, sub, "TB / U"],
-    [OUT.zWaz, sub, "BB / U"],
-    [OUT.zWhz, sub, "BB / TB"],
-    [OUT.statusHaz, head, "STATUS GIZI"],
-    [OUT.statusHaz, sub, "TB / U"],
-    [OUT.statusWaz, sub, "BB / U"],
-    [OUT.statusWhz, sub, "BB / TB"],
-    [OUT.imt, head, "IMT"],
-    [OUT.recheck, head, "PERLU DICEK"],
-    [PSG_COLUMNS.posyandu, head, "POSY"],
-    [OUT.note, head, "KETERANGAN"],
-    ...PSG_FLAG_COLUMNS.map((c): [string, number, string] => [
-      c.column,
-      sub,
-      c.header,
-    ]),
-  ]
-  for (const [column, row, value] of headers) {
-    put(sheet, column, row, text(value))
-  }
+  addExtraColumns(sheet, total, flagsOf)
 
   entries.forEach((entry, index) => {
     const row = PSG_FIRST_DATA_ROW + index
+    const set = (letters: string, value: string | number | null) => {
+      if (value !== null) sheet.getCell(`${letters}${row}`).value = value
+    }
     const measured = entry.measuredAt.split("-").map(Number)
     const born = entry.birthDate.split("-").map(Number)
-    put(sheet, OUT.no, row, num(index + 1))
-    put(sheet, PSG_COLUMNS.name, row, text(entry.name))
-    put(sheet, PSG_COLUMNS.sex, row, num(entry.sex === "M" ? 1 : 2))
-    put(sheet, PSG_COLUMNS.measureDay, row, num(measured[2]))
-    put(sheet, PSG_COLUMNS.measureMonth, row, num(measured[1]))
-    put(sheet, PSG_COLUMNS.measureYear, row, num(measured[0] % 100))
-    put(sheet, PSG_COLUMNS.birthDay, row, num(born[2]))
-    put(sheet, PSG_COLUMNS.birthMonth, row, num(born[1]))
-    put(sheet, PSG_COLUMNS.birthYear, row, num(born[0] % 100))
-    put(sheet, OUT.umur, row, numOrNull(entry.ageMonths))
-    put(sheet, PSG_COLUMNS.weightKg, row, numOrNull(entry.weightKg))
-    put(sheet, PSG_COLUMNS.heightCm, row, numOrNull(entry.heightCm))
-    put(sheet, OUT.zHaz, row, numOrNull(round(entry.haz, 2)))
-    put(sheet, OUT.zWaz, row, numOrNull(round(entry.waz, 2)))
-    put(sheet, OUT.zWhz, row, numOrNull(round(entry.whz, 2)))
-    put(sheet, OUT.statusHaz, row, text(label(entry.hazCategory)))
-    put(sheet, OUT.statusWaz, row, text(label(entry.wazCategory)))
-    put(sheet, OUT.statusWhz, row, text(label(entry.whzCategory)))
-    put(sheet, OUT.imt, row, numOrNull(bmi(entry)))
-    put(sheet, PSG_COLUMNS.posyandu, row, text(entry.posyandu ?? ""))
+
+    set(PSG_COLUMNS.name, entry.name)
+    set(PSG_COLUMNS.sex, entry.sex === "M" ? 1 : 2)
+    set(PSG_COLUMNS.measureDay, measured[2])
+    set(PSG_COLUMNS.measureMonth, measured[1])
+    set(PSG_COLUMNS.measureYear, measured[0] % 100)
+    set(PSG_COLUMNS.birthDay, born[2])
+    set(PSG_COLUMNS.birthMonth, born[1])
+    set(PSG_COLUMNS.birthYear, born[0] % 100)
+    set(OUT.umur, entry.ageMonths)
+    set(PSG_COLUMNS.weightKg, entry.weightKg)
+    set(PSG_COLUMNS.heightCm, entry.heightCm)
+    set(OUT.zHaz, round(entry.haz, 2))
+    set(OUT.zWaz, round(entry.waz, 2))
+    set(OUT.zWhz, round(entry.whz, 2))
+    set(OUT.statusHaz, label(entry.hazCategory) || null)
+    set(OUT.statusWaz, label(entry.wazCategory) || null)
+    set(OUT.statusWhz, label(entry.whzCategory) || null)
+    set(OUT.imt, bmi(entry))
+    set(PSG_COLUMNS.posyandu, entry.posyandu ?? "")
+
+    for (const letters of [OUT.zHaz, OUT.zWaz, OUT.zWhz]) {
+      own(sheet.getCell(`${letters}${row}`)).numFmt = "0.00"
+    }
+    own(sheet.getCell(`${OUT.imt}${row}`)).numFmt = "0.0"
+
+    // Status yang tidak normal berwarna merah tebal.
+    const abnormal: [string, NutritionCategory | null][] = [
+      [OUT.statusHaz, entry.hazCategory],
+      [OUT.statusWaz, entry.wazCategory],
+      [OUT.statusWhz, entry.whzCategory],
+    ]
+    for (const [letters, category] of abnormal) {
+      if (isNormal(category)) continue
+      const cell = own(sheet.getCell(`${letters}${row}`))
+      cell.font = {
+        ...cell.font,
+        bold: true,
+        color: { argb: ABNORMAL_TEXT },
+      }
+    }
+
     PSG_FLAG_COLUMNS.forEach((column) => {
-      put(sheet, column.column, row, num(flagsOf[index][column.flag] ? 1 : 0))
+      sheet.getCell(`${column.column}${row}`).value = flagsOf[index][
+        column.flag
+      ]
+        ? 1
+        : 0
     })
 
     const notes = [
@@ -239,33 +264,91 @@ export function buildPsgWorkbook(
       ...(reasonsByChild.get(entry.childId) ?? []),
     ]
     if (notes.length > 0) {
-      put(sheet, OUT.recheck, row, text("YA"))
-      put(sheet, OUT.note, row, text(notes.join(" ")))
+      sheet.getCell(`${OUT.recheck}${row}`).value = "YA"
+      sheet.getCell(`${OUT.note}${row}`).value = notes.join(" ")
+      for (const letters of [PSG_COLUMNS.name, OUT.recheck]) {
+        own(sheet.getCell(`${letters}${row}`)).fill = {
+          type: "pattern",
+          pattern: "solid",
+          fgColor: { argb: ATTENTION_FILL },
+        }
+      }
     }
   })
 
-  sheet["!ref"] = XLSX.utils.encode_range({
-    s: { r: 0, c: 0 },
-    e: {
-      r: Math.max(PSG_FIRST_DATA_ROW, PSG_FIRST_DATA_ROW + total - 1) - 1,
-      c: columnIndex(OUT.note),
-    },
-  })
-  sheet["!cols"] = Array.from(
-    { length: columnIndex(OUT.note) + 1 },
-    (_, i) => ({
-      wch:
-        i === columnIndex(PSG_COLUMNS.name)
-          ? 28
-          : i === columnIndex(OUT.note)
-            ? 90
-            : i >= columnIndex(OUT.statusHaz) && i <= columnIndex(OUT.statusWhz)
-              ? 20
-              : 9,
-    })
-  )
+  return new Uint8Array((await workbook.xlsx.writeBuffer()) as ArrayBuffer)
+}
 
-  const book = XLSX.utils.book_new()
-  XLSX.utils.book_append_sheet(book, sheet, PSG_SHEET_NAME)
-  return new Uint8Array(XLSX.write(book, { type: "array", bookType: "xlsx" }))
+/**
+ * Kolom di kanan POSY yang tidak ada pada template: PERLU DICEK, KETERANGAN, penanda 1/0, serta
+ * ringkasan JML dan persen di atas penanda. Gayanya diambil dari sel template yang sudah ada.
+ */
+function addExtraColumns(
+  sheet: Worksheet,
+  total: number,
+  flagsOf: ReturnType<typeof statusFlagsOf>[]
+): void {
+  const headerTop = sheet.getCell("AG6")
+  const headerSub = sheet.getCell("AG7")
+  const body = sheet.getCell("L9") // sel putih berborder
+
+  const header = (letters: string, top: string, sub: string) => {
+    const topCell = sheet.getCell(`${letters}6`)
+    const subCell = sheet.getCell(`${letters}7`)
+    topCell.value = top
+    subCell.value = sub
+    copyStyle(headerTop, topCell)
+    copyStyle(headerSub, subCell)
+  }
+
+  header(OUT.recheck, "PERLU", "DICEK")
+  header(OUT.note, "KETERANGAN", "Alasan perlu dicek atau status tidak normal")
+  for (const column of PSG_FLAG_COLUMNS)
+    header(column.column, column.header, "")
+
+  sheet.getColumn(columnIndex(OUT.recheck) + 1).width = 9
+  sheet.getColumn(columnIndex(OUT.note) + 1).width = 80
+  for (const column of PSG_FLAG_COLUMNS) {
+    sheet.getColumn(columnIndex(column.column) + 1).width = 7
+  }
+
+  const lastRow = PSG_FIRST_DATA_ROW + Math.max(total, 1) - 1
+  for (let row = PSG_FIRST_DATA_ROW; row <= lastRow; row++) {
+    for (const letters of [
+      OUT.recheck,
+      OUT.note,
+      ...PSG_FLAG_COLUMNS.map((c) => c.column),
+    ]) {
+      const cell = sheet.getCell(`${letters}${row}`)
+      copyStyle(body, cell)
+      if (letters === OUT.note) {
+        cell.alignment = {
+          horizontal: "left",
+          vertical: "middle",
+          wrapText: true,
+        }
+      }
+    }
+  }
+
+  // Ringkasan jumlah dan persen anak per penanda, di atas kolom penanda.
+  const labelCell = (letters: string, row: number, value: string) => {
+    const cell = own(sheet.getCell(`${letters}${row}`))
+    cell.value = value
+    cell.font = { name: "Arial", size: 9, bold: true }
+    cell.alignment = { horizontal: "right", vertical: "middle" }
+  }
+  labelCell(OUT.note, 4, "JML")
+  labelCell(OUT.note, 5, "%")
+  for (const column of PSG_FLAG_COLUMNS) {
+    const count = flagsOf.filter((flags) => flags[column.flag]).length
+    const jml = sheet.getCell(`${column.column}4`)
+    jml.value = count
+    jml.font = { name: "Arial", size: 9, bold: true }
+    jml.alignment = { horizontal: "center", vertical: "middle" }
+    const pct = sheet.getCell(`${column.column}5`)
+    pct.value = total === 0 ? 0 : round((count * 100) / total, 1)
+    pct.font = { name: "Arial", size: 9 }
+    pct.alignment = { horizontal: "center", vertical: "middle" }
+  }
 }
