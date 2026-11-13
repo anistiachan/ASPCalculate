@@ -4,3 +4,5 @@ package-lock.json
 next-env.d.ts
 # Dibuat ulang otomatis oleh `next dev`.
 AGENTS.md
+# Data referensi WHO dihasilkan scripts/import-who-tables.mjs; jangan diformat ulang.
+src/domain/anthropometry/references/who-2006/

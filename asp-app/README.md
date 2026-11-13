@@ -2,7 +2,9 @@
 
 Aplikasi web untuk pencatatan Posyandu dan pemantauan antropometri balita (0–60 bulan). Terinspirasi dari alur kerja workbook ASP di lapangan, tetapi perhitungan gizi mengacu pada standar resmi (Permenkes No. 2 Tahun 2020 dan WHO Child Growth Standards 2006).
 
-> **Status: Phase 2 selesai.** Sudah ada import Excel, pencatatan balita dan pengukuran, serta pencarian dan filter, semuanya tersimpan di perangkat. **Belum ada perhitungan antropometri** (z-score dan status gizi), dashboard, maupun laporan. Aplikasi ini belum boleh dipakai untuk keputusan layanan gizi.
+> **Status: Phase 3 selesai secara teknis, menunggu tinjauan tenaga kesehatan.** Sudah ada import Excel, pencatatan balita dan pengukuran, pencarian dan filter, serta perhitungan z-score dan status gizi (BB/U, TB/U, BB/PB-TB, IMT/U) menurut Permenkes 2/2020 dengan acuan WHO 2006. Belum ada dashboard maupun laporan.
+>
+> **Hasil perhitungan belum divalidasi oleh tenaga kesehatan** dan setiap hasil di layar menampilkan peringatan itu. Aplikasi ini belum boleh dipakai untuk keputusan layanan gizi. Daftar keputusan yang perlu ditinjau ada di [`../docs/OPENASP-VALIDASI-ANTROPOMETRI.md`](../docs/OPENASP-VALIDASI-ANTROPOMETRI.md).
 
 Dokumen perencanaan ada di [`../docs`](../docs). Mulai dari `OPENASP-NEXT-STEPS.md`.
 
@@ -34,25 +36,30 @@ Untuk mencoba import, gunakan file contoh sintetis di [`samples/`](samples/READM
 
 ## Perintah
 
-| Perintah                   | Fungsi                                                         |
-| -------------------------- | -------------------------------------------------------------- |
-| `npm run dev`              | Server pengembangan                                            |
-| `npm run build`            | Build produksi                                                 |
-| `npm run start`            | Menjalankan hasil build                                        |
-| `npm run lint`             | ESLint                                                         |
-| `npm run typecheck`        | Pemeriksaan tipe (membuat tipe rute Next.js lebih dulu)        |
-| `npm test`                 | Tes unit dan integrasi (Vitest)                                |
-| `npm run test:watch`       | Tes unit dalam mode watch                                      |
-| `npm run test:e2e`         | Tes end-to-end di browser (Playwright). Jalankan `build` dulu. |
-| `npm run format`           | Merapikan kode dengan Prettier                                 |
-| `npm run format:check`     | Memeriksa format tanpa mengubah file                           |
-| `npm run samples:generate` | Membuat ulang file contoh Excel di `samples/`                  |
+| Perintah                   | Fungsi                                                              |
+| -------------------------- | ------------------------------------------------------------------- |
+| `npm run dev`              | Server pengembangan                                                 |
+| `npm run build`            | Build produksi                                                      |
+| `npm run start`            | Menjalankan hasil build                                             |
+| `npm run lint`             | ESLint                                                              |
+| `npm run typecheck`        | Pemeriksaan tipe (membuat tipe rute Next.js lebih dulu)             |
+| `npm test`                 | Tes unit dan integrasi (Vitest)                                     |
+| `npm run test:watch`       | Tes unit dalam mode watch                                           |
+| `npm run test:e2e`         | Tes end-to-end di browser (Playwright). Jalankan `build` dulu.      |
+| `npm run format`           | Merapikan kode dengan Prettier                                      |
+| `npm run format:check`     | Memeriksa format tanpa mengubah file                                |
+| `npm run samples:generate` | Membuat ulang file contoh Excel di `samples/`                       |
+| `npm run who:import`       | Mengunduh dan memvalidasi tabel referensi WHO 2006 (lihat di bawah) |
 
 Sebelum commit, jalankan `format:check`, `typecheck`, `lint`, `test`, `build`, lalu `test:e2e`.
 
 ### Tes end-to-end
 
 `test:e2e` memakai Microsoft Edge yang sudah ada di Windows (tidak mengunduh browser) dan menguji hasil build produksi di port 3217. Ganti port dengan `E2E_PORT` bila bentrok. Tes mencakup alur import, tambah/ubah/hapus balita dan pengukuran, serta pemeriksaan aksesibilitas otomatis (axe-core, WCAG 2.2 AA) pada halaman yang benar-benar dirender.
+
+### Tabel referensi WHO
+
+Parameter LMS di `src/domain/anthropometry/references/who-2006/` **dihasilkan** oleh `npm run who:import` dari tabel resmi WHO (`cdn.who.int`); jangan mengubah JSON-nya dengan tangan atau memformatnya dengan Prettier. Skrip memverifikasi hash SHA-256 setiap berkas dan mencocokkan hasil hitung dengan kolom SD yang diterbitkan WHO. Jika WHO mengganti berkas, skrip berhenti sampai perubahannya ditinjau. Detail di `../docs/OPENASP-VALIDASI-ANTROPOMETRI.md`.
 
 ### Catatan lingkungan Windows
 
@@ -72,8 +79,10 @@ src/
 │   ├── molecules/            # FormField, PageHeader, ToggleButtonGroup, dst.
 │   └── organisms/            # AppSidebar
 ├── domain/                   # Aturan bisnis murni (tanpa React/Next.js)
+│   ├── anthropometry/        # Mesin z-score, koreksi posisi, klasifikasi Permenkes
+│   │   └── references/       # Tabel LMS WHO 2006 (dihasilkan skrip)
 │   ├── child/                # Tipe anak dan data tersimpan
-│   └── measurement/          # Pemeriksaan kewajaran nilai
+│   └── measurement/          # Pemeriksaan kewajaran nilai input
 ├── features/
 │   ├── children/             # Daftar, form, detail, hook data, skema validasi
 │   └── excel-import/         # Adapter, normalizer, validator, perencana import
@@ -99,16 +108,16 @@ Beberapa komponen di `src/components/ui/` sudah disesuaikan (kontras AA, ukuran 
 
 ## Tahapan
 
-| Phase | Isi                                  | Status  |
-| ----- | ------------------------------------ | ------- |
-| 0     | Fondasi proyek                       | Selesai |
-| 1     | Import Excel (adapter Bu Bidan)      | Selesai |
-| 2     | Data balita dan pengukuran           | Selesai |
-| 3     | Mesin antropometri (WHO + Permenkes) | Belum   |
-| 4     | Dashboard dan laporan                | Belum   |
-| 5     | PWA, hardening, deployment           | Belum   |
+| Phase | Isi                                  | Status                                                 |
+| ----- | ------------------------------------ | ------------------------------------------------------ |
+| 0     | Fondasi proyek                       | Selesai                                                |
+| 1     | Import Excel (adapter Bu Bidan)      | Selesai                                                |
+| 2     | Data balita dan pengukuran           | Selesai                                                |
+| 3     | Mesin antropometri (WHO + Permenkes) | Teknis selesai, **menunggu tinjauan tenaga kesehatan** |
+| 4     | Dashboard dan laporan                | Belum                                                  |
+| 5     | PWA, hardening, deployment           | Belum                                                  |
 
-Belum dikerjakan di Phase 1–2: adapter ASP Karangtawar, layar penyelesaian konflik import, serta backup dan restore data.
+Belum dikerjakan: adapter ASP Karangtawar, layar penyelesaian konflik import, backup dan restore data, serta grafik kurva dan pemantauan tren pertumbuhan.
 
 ## Disclaimer
 

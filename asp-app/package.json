@@ -13,7 +13,8 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "samples:generate": "node scripts/generate-sample-workbooks.mjs",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "who:import": "node scripts/import-who-tables.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^7.0.6",

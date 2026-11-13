@@ -15,6 +15,17 @@ export function byLabel(
   return page.getByLabel(text, options).filter({ visible: true })
 }
 
+/**
+ * Baris pada tabel "Riwayat pengukuran" saja. Tanggal yang sama juga muncul di tabel status
+ * gizi, jadi mencari baris dari seluruh halaman akan menemukan dua baris.
+ */
+export function historyRow(page: Page, name: RegExp) {
+  return page
+    .locator("[data-slot=card]")
+    .filter({ hasText: "Riwayat pengukuran" })
+    .getByRole("row", { name })
+}
+
 /** Mengimpor file contoh sintetis lewat halaman Import, seperti yang dilakukan pengguna. */
 export async function importSample(
   page: Page,

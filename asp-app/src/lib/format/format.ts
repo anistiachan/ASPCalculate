@@ -40,6 +40,17 @@ export function formatNumber(value: number | null): string {
   return value === null ? "–" : numberFormatter.format(value)
 }
 
+const zScoreFormatter = new Intl.NumberFormat("id-ID", {
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+  signDisplay: "exceptZero",
+})
+
+/** `0.24` → `+0,24`, `-6.09` → `-6,09`, `0` → `0,00`. Selalu 2 desimal; null → strip. */
+export function formatZScore(z: number | null): string {
+  return z === null ? "–" : zScoreFormatter.format(z)
+}
+
 /** Umur bulan penuh untuk tampilan; null → strip. */
 export function formatAgeMonths(months: number | null): string {
   if (months === null) return "–"

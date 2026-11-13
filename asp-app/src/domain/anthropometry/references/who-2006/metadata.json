@@ -1,0 +1,163 @@
+{
+  "standard": "WHO Child Growth Standards 2006",
+  "tableType": "Expanded tables (parameter LMS dan nilai SD)",
+  "retrievedAt": "2026-11-12",
+  "importScript": "scripts/import-who-tables.mjs",
+  "sdToleranceUsed": 0.002,
+  "tables": {
+    "wfa": {
+      "keyName": "ageDays",
+      "start": 0,
+      "step": 1,
+      "count": 1857
+    },
+    "lhfa": {
+      "keyName": "ageDays",
+      "start": 0,
+      "step": 1,
+      "count": 1857
+    },
+    "bfa": {
+      "keyName": "ageDays",
+      "start": 0,
+      "step": 1,
+      "count": 1857
+    },
+    "wfl": {
+      "keyName": "lengthCm",
+      "start": 45,
+      "step": 0.1,
+      "count": 651
+    },
+    "wfh": {
+      "keyName": "heightCm",
+      "start": 65,
+      "step": 0.1,
+      "count": 551
+    }
+  },
+  "sources": [
+    {
+      "indicator": "wfa",
+      "sex": "male",
+      "url": "https://cdn.who.int/media/docs/default-source/child-growth/child-growth-standards/indicators/weight-for-age/expanded-tables/wfa-boys-zscore-expanded-tables.xlsx",
+      "sha256": "b5b4748c6bfa5230e2eddafa1767629c349178b08d457f400b59422b8bfef86c",
+      "bytes": 198984
+    },
+    {
+      "indicator": "wfa",
+      "sex": "female",
+      "url": "https://cdn.who.int/media/docs/default-source/child-growth/child-growth-standards/indicators/weight-for-age/expanded-tables/wfa-girls-zscore-expanded-tables.xlsx",
+      "sha256": "ee3ae12cb96c6c5541cdf43665c03ce6c984f877859a183a5f6104eb06a49a6e",
+      "bytes": 197671
+    },
+    {
+      "indicator": "lhfa",
+      "sex": "male",
+      "url": "https://cdn.who.int/media/docs/default-source/child-growth/child-growth-standards/indicators/length-height-for-age/expandable-tables/lhfa-boys-zscore-expanded-tables.xlsx",
+      "sha256": "c4b1c9029ab9751a5f0888e32f35c7c0287a16d361885cf911ecf23b3f7f6b4f",
+      "bytes": 200151
+    },
+    {
+      "indicator": "lhfa",
+      "sex": "female",
+      "url": "https://cdn.who.int/media/docs/default-source/child-growth/child-growth-standards/indicators/length-height-for-age/expandable-tables/lhfa-girls-zscore-expanded-tables.xlsx",
+      "sha256": "6aa2876319449a6b1f4d825848128902114ff53c67b92b86a0c5140846013059",
+      "bytes": 199890
+    },
+    {
+      "indicator": "bfa",
+      "sex": "male",
+      "url": "https://cdn.who.int/media/docs/default-source/child-growth/child-growth-standards/indicators/body-mass-index-for-age/expanded-tables/bfa-boys-zscore-expanded-tables.xlsx",
+      "sha256": "58dcb2abea0e04b1c4f8ad3511d05ec1bea03741f230ac127b93f929e4cc6fc8",
+      "bytes": 185753
+    },
+    {
+      "indicator": "bfa",
+      "sex": "female",
+      "url": "https://cdn.who.int/media/docs/default-source/child-growth/child-growth-standards/indicators/body-mass-index-for-age/expanded-tables/bfa-girls-zscore-expanded-tables.xlsx",
+      "sha256": "d3817262a383cdd02553b004f1c6110527d30b729c70501d032e71caadc17529",
+      "bytes": 177923
+    },
+    {
+      "indicator": "wfl",
+      "sex": "male",
+      "url": "https://cdn.who.int/media/docs/default-source/child-growth/child-growth-standards/indicators/weight-for-length-height/expanded-tables/wfl-boys-zscore-expanded-table.xlsx",
+      "sha256": "1a6e9a002d2692d038161bc6572a10f8b9fa0657163808141d2981a2132c59cc",
+      "bytes": 74264
+    },
+    {
+      "indicator": "wfl",
+      "sex": "female",
+      "url": "https://cdn.who.int/media/docs/default-source/child-growth/child-growth-standards/indicators/weight-for-length-height/expanded-tables/wfl-girls-zscore-expanded-table.xlsx",
+      "sha256": "ec116b8e618ad311d34a87231346badf16c75f5c4f82222ec846e05c582bf16a",
+      "bytes": 73863
+    },
+    {
+      "indicator": "wfh",
+      "sex": "male",
+      "url": "https://cdn.who.int/media/docs/default-source/child-growth/child-growth-standards/indicators/weight-for-length-height/expanded-tables/wfh-boys-zscore-expanded-tables.xlsx",
+      "sha256": "ed3b590f9c65937a138408b13618f33684bb6406a0c56d6a2ce3fd9053a3f59f",
+      "bytes": 64812
+    },
+    {
+      "indicator": "wfh",
+      "sex": "female",
+      "url": "https://cdn.who.int/media/docs/default-source/child-growth/child-growth-standards/indicators/weight-for-length-height/expanded-tables/wfh-girls-zscore-expanded-tables.xlsx",
+      "sha256": "fca340d5f04aa1556ac410b176b65b290e1b9ff467fc854a97f9b54ad94c9b8a",
+      "bytes": 64884
+    }
+  ],
+  "validation": [
+    {
+      "file": "wfa-boys.xlsx",
+      "maxSdDeviation": 0.0005,
+      "rowsWithLZero": 0
+    },
+    {
+      "file": "wfa-girls.xlsx",
+      "maxSdDeviation": 0.0005,
+      "rowsWithLZero": 0
+    },
+    {
+      "file": "lhfa-boys.xlsx",
+      "maxSdDeviation": 0.0005,
+      "rowsWithLZero": 0
+    },
+    {
+      "file": "lhfa-girls.xlsx",
+      "maxSdDeviation": 0.0005,
+      "rowsWithLZero": 0
+    },
+    {
+      "file": "bfa-boys.xlsx",
+      "maxSdDeviation": 0.0005,
+      "rowsWithLZero": 0
+    },
+    {
+      "file": "bfa-girls.xlsx",
+      "maxSdDeviation": 0.0005,
+      "rowsWithLZero": 0
+    },
+    {
+      "file": "wfl-boys.xlsx",
+      "maxSdDeviation": 0.0005,
+      "rowsWithLZero": 0
+    },
+    {
+      "file": "wfl-girls.xlsx",
+      "maxSdDeviation": 0.0005,
+      "rowsWithLZero": 0
+    },
+    {
+      "file": "wfh-boys.xlsx",
+      "maxSdDeviation": 0.0005,
+      "rowsWithLZero": 0
+    },
+    {
+      "file": "wfh-girls.xlsx",
+      "maxSdDeviation": 0.0005,
+      "rowsWithLZero": 0
+    }
+  ]
+}

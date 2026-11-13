@@ -5,6 +5,7 @@ import {
   addChild,
   addMeasurement,
   byLabel,
+  historyRow,
   importAndSaveValidSample,
   importSample,
 } from "./helpers"
@@ -73,12 +74,31 @@ test.describe("aksesibilitas (WCAG 2.2 AA)", () => {
       height: "88,5",
       position: "Berdiri",
     })
-    await expect(page.getByRole("row", { name: /10 Jun 2026/ })).toBeVisible()
+    await expect(historyRow(page, /10 Jun 2026/)).toBeVisible()
     await expectNoViolations(page, "detail balita")
 
     await page.getByRole("button", { name: /Hapus pengukuran 10/ }).click()
     await expect(page.getByRole("alertdialog")).toBeVisible()
     await expectNoViolations(page, "dialog konfirmasi hapus")
+  })
+
+  test("tabel status gizi dengan badge kategori dan catatan", async ({
+    page,
+  }) => {
+    await addChild(page, {
+      name: "Bayi Aksesibel",
+      birthDate: "2026-01-01",
+      sex: "Laki-laki",
+    })
+    // Bayi 8 bulan diukur berdiri: kategori "Sangat pendek" (badge merah) beserta catatan.
+    await addMeasurement(page, {
+      date: "2026-09-02",
+      weight: "7",
+      height: "60",
+      position: "Berdiri",
+    })
+    await expect(page.getByText("Sangat pendek")).toBeVisible()
+    await expectNoViolations(page, "tabel status gizi")
   })
 
   test("formulir pengukuran dengan peringatan kewajaran", async ({ page }) => {

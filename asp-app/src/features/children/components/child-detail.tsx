@@ -46,6 +46,7 @@ import { useChild, useChildMeasurements } from "../hooks/use-children-data"
 import { POSITION_LABELS, SEX_LABELS } from "../labels"
 import { ConfirmDeleteDialog } from "./confirm-delete-dialog"
 import { NotFoundCard } from "./not-found-card"
+import { NutritionStatus } from "./nutrition-status"
 
 export function ChildDetail({ childId }: { childId: string }) {
   const child = useChild(childId)
@@ -185,6 +186,8 @@ function ChildDetailView({
           )}
         </CardContent>
       </Card>
+
+      <NutritionStatus child={child} measurements={measurements} />
     </div>
   )
 }

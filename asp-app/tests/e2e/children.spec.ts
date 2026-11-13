@@ -4,6 +4,7 @@ import {
   addChild,
   addMeasurement,
   byLabel,
+  historyRow,
   importAndSaveValidSample,
   importSample,
 } from "./helpers"
@@ -280,7 +281,7 @@ test.describe("pengukuran", () => {
     await expect(
       page.getByRole("heading", { level: 1, name: "Anak Ukur" })
     ).toBeVisible()
-    const row = page.getByRole("row", { name: /10 Jun 2026/ })
+    const row = historyRow(page, /10 Jun 2026/)
     await expect(row).toBeVisible()
     await expect(row).toContainText("12,4")
     await expect(row).toContainText("88,5")
@@ -347,14 +348,12 @@ test.describe("pengukuran", () => {
     ).toBeVisible()
 
     await page.getByRole("button", { name: "Simpan" }).click()
-    await expect(page.getByRole("row", { name: /10 Jun 2026/ })).toContainText(
-      "45"
-    )
+    await expect(historyRow(page, /10 Jun 2026/)).toContainText("45")
   })
 
   test("pengukuran pada tanggal yang sama ditolak", async ({ page }) => {
     await addMeasurement(page, { date: "2026-06-10", weight: "12" })
-    await expect(page.getByRole("row", { name: /10 Jun 2026/ })).toBeVisible()
+    await expect(historyRow(page, /10 Jun 2026/)).toBeVisible()
 
     await addMeasurement(page, { date: "2026-06-10", weight: "13" })
     await expect(
@@ -370,9 +369,7 @@ test.describe("pengukuran", () => {
 
     await byLabel(page, "Berat (kg)").fill("12,8")
     await page.getByRole("button", { name: "Simpan" }).click()
-    await expect(page.getByRole("row", { name: /10 Jun 2026/ })).toContainText(
-      "12,8"
-    )
+    await expect(historyRow(page, /10 Jun 2026/)).toContainText("12,8")
   })
 
   test("membuka Tambah pengukuran lagi setelah menyimpan menampilkan formulir kosong", async ({
@@ -384,7 +381,7 @@ test.describe("pengukuran", () => {
       height: "80",
       position: "Berdiri",
     })
-    await expect(page.getByRole("row", { name: /10 Jun 2026/ })).toBeVisible()
+    await expect(historyRow(page, /10 Jun 2026/)).toBeVisible()
 
     await page.getByRole("link", { name: "Tambah pengukuran" }).first().click()
     await expect(byLabel(page, "Tanggal ukur")).toBeVisible()
@@ -399,7 +396,7 @@ test.describe("pengukuran", () => {
     page,
   }) => {
     await addMeasurement(page, { date: "2026-06-10", weight: "12" })
-    const row = page.getByRole("row", { name: /10 Jun 2026/ })
+    const row = historyRow(page, /10 Jun 2026/)
 
     await page.getByRole("button", { name: /Hapus pengukuran 10/ }).click()
     await expect(page.getByRole("alertdialog")).toContainText(
@@ -450,5 +447,127 @@ test.describe("kursor penunjuk", () => {
 
     await page.goto("/import")
     expect(await cursorOf(byLabel(page, "File Excel"))).toBe("pointer")
+  })
+})
+
+test.describe("status gizi (antropometri)", () => {
+  // Kartu status gizi dikenali dari peringatan validasi di dalamnya (judul kartu berupa div,
+  // bukan heading).
+  const nutritionRow = (page: import("@playwright/test").Page, date: RegExp) =>
+    page
+      .locator("[data-slot=card]")
+      .filter({ hasText: "Hasil masih dalam tahap uji" })
+      .getByRole("row", { name: date })
+
+  test("tanpa pengukuran: menjelaskan kapan status gizi muncul", async ({
+    page,
+  }) => {
+    await addChild(page, {
+      name: "Anak Belum Ukur",
+      birthDate: "2025-03-15",
+      sex: "Laki-laki",
+    })
+    await expect(
+      page.getByText("Status gizi muncul setelah ada pengukuran.")
+    ).toBeVisible()
+  })
+
+  test("selalu menampilkan peringatan bahwa hasil belum divalidasi tenaga kesehatan", async ({
+    page,
+  }) => {
+    await addChild(page, {
+      name: "Anak Peringatan Validasi",
+      birthDate: "2025-03-15",
+      sex: "Laki-laki",
+    })
+    await expect(page.getByText("Hasil masih dalam tahap uji")).toBeVisible()
+    await expect(
+      page.getByText(/belum divalidasi oleh tenaga kesehatan/)
+    ).toBeVisible()
+  })
+
+  test("vektor uji WHO Anthro: perempuan 1522 hari, 17 kg → BB/U +0,24, berat badan normal", async ({
+    page,
+  }) => {
+    // 2022-01-01 + 1522 hari = 2026-03-03.
+    await addChild(page, {
+      name: "Anak Vektor WHO",
+      birthDate: "2022-01-01",
+      sex: "Perempuan",
+    })
+    await addMeasurement(page, { date: "2026-03-03", weight: "17" })
+
+    const row = nutritionRow(page, /3 Mar 2026|03 Mar 2026/)
+    await expect(row).toBeVisible()
+    await expect(row).toContainText("+0,24")
+    await expect(row).toContainText("Berat badan normal")
+    // Tanpa tinggi: indikator lain kosong dan dijelaskan.
+    await expect(row).toContainText("Panjang/tinggi belum diisi.")
+  })
+
+  test("vektor uji WHO Anthro: bayi 8 bulan diukur berdiri → TB/U -4,81, ditandai dan tidak dikoreksi", async ({
+    page,
+  }) => {
+    // 2026-01-01 + 244 hari = 2026-09-02 (8 bulan menurut WHO).
+    await addChild(page, {
+      name: "Bayi Berdiri",
+      birthDate: "2026-01-01",
+      sex: "Laki-laki",
+    })
+    await addMeasurement(page, {
+      date: "2026-09-02",
+      height: "60",
+      position: "Berdiri",
+    })
+
+    const row = nutritionRow(page, /2 Sep 2026|02 Sep 2026/)
+    await expect(row).toBeVisible()
+    await expect(row).toContainText("-4,81")
+    await expect(row).toContainText("Sangat pendek")
+    await expect(row).toContainText("Bayi di bawah 9 bulan diukur berdiri")
+    // -4,81 masih di dalam ambang "tidak wajar" WHO untuk TB/U (±6): tidak ditandai.
+    await expect(row).not.toContainText("tidak wajar secara biologis")
+  })
+
+  test("umur 60 bulan atau lebih: status gizi tidak dihitung dan dijelaskan", async ({
+    page,
+  }) => {
+    await addChild(page, {
+      name: "Anak Di Atas Lima Tahun",
+      birthDate: "2020-01-01",
+      sex: "Perempuan",
+    })
+    await addMeasurement(page, { date: "2026-06-10", weight: "20" })
+
+    const row = nutritionRow(page, /10 Jun 2026/)
+    await expect(row).toContainText("Umur 60 bulan atau lebih")
+    await expect(row).not.toContainText("Berat badan")
+  })
+
+  test("tabel referensi hanya dimuat saat dibutuhkan, tidak di halaman lain", async ({
+    page,
+  }) => {
+    const requested: string[] = []
+    page.on("request", (request) => {
+      if (/\/_next\/static\/.*\.js/.test(request.url()))
+        requested.push(request.url())
+    })
+    await page.goto("/dashboard")
+    await expect(
+      page.getByRole("heading", { level: 1, name: "Dashboard" })
+    ).toBeVisible()
+    const before = requested.length
+
+    // Hasil build: JSON referensi ikut di chunk tersendiri yang baru diminta di halaman detail.
+    await addChild(page, {
+      name: "Anak Muat Referensi",
+      birthDate: "2025-03-15",
+      sex: "Laki-laki",
+    })
+    await addMeasurement(page, { date: "2026-06-10", weight: "12" })
+    await expect(
+      page.getByText("Berat badan", { exact: false }).first()
+    ).toBeVisible()
+    expect(requested.length).toBeGreaterThan(before)
   })
 })
