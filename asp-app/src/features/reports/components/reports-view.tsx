@@ -21,11 +21,19 @@ import { useToday } from "@/lib/hooks/use-today"
 
 import { useReportData, type ReportData } from "../hooks/use-report-data"
 import { computeRecapForMonth } from "../services/recap-for-month"
+import {
+  ALL_POSYANDU,
+  filterByPosyandu,
+  posyanduOptions,
+} from "../services/posyandu-filter"
+import { computeSkdnForMonth } from "../services/skdn-for-month"
 import { yearOptions } from "../services/year-options"
 import { CoverageSummary } from "./coverage-summary"
 import { DefinitionsNotice } from "./definitions-notice"
 import { ExportRecapButton } from "./export-recap-button"
 import { MonthPicker } from "./month-picker"
+import { PosyanduPicker } from "./posyandu-picker"
+import { SkdnSummary } from "./skdn-summary"
 import { StatusDistribution } from "./status-distribution"
 import { VitaminASummary } from "./vitamin-a-summary"
 
@@ -65,21 +73,35 @@ export function ReportsView() {
   const today = useToday()
   const data = useReportData()
   const [selected, setSelected] = useState<MonthKey | null>(null)
+  const [posyanduChoice, setPosyanduChoice] = useState(ALL_POSYANDU)
 
   if (today === null || data === undefined) return <LoadingSkeleton />
   if (data.children.length === 0) return <EmptyState />
 
   const currentMonth = monthKeyOf(today)
   const month = selected ?? currentMonth
+  const posyanduNames = posyanduOptions(data.children)
+  // Pilihan yang sudah tidak ada pada data (mis. anaknya dihapus) kembali ke semua Posyandu.
+  const posyandu = posyanduNames.includes(posyanduChoice)
+    ? posyanduChoice
+    : ALL_POSYANDU
+  const scoped = filterByPosyandu(data, posyandu)
 
   return (
     <div className="space-y-6">
-      <MonthPicker
-        month={month}
-        currentMonth={currentMonth}
-        years={yearOptions(data.measurements, today)}
-        onChange={setSelected}
-      />
+      <div className="flex flex-wrap items-end gap-3">
+        <MonthPicker
+          month={month}
+          currentMonth={currentMonth}
+          years={yearOptions(data.measurements, today)}
+          onChange={setSelected}
+        />
+        <PosyanduPicker
+          options={posyanduNames}
+          value={posyandu}
+          onChange={setPosyanduChoice}
+        />
+      </div>
 
       <ErrorBoundary
         fallback={
@@ -90,7 +112,11 @@ export function ReportsView() {
         }
       >
         <Suspense fallback={<LoadingSkeleton />}>
-          <RecapSections month={month} data={data} />
+          <RecapSections
+            month={month}
+            data={scoped}
+            posyandu={posyandu === ALL_POSYANDU ? null : posyandu}
+          />
         </Suspense>
       </ErrorBoundary>
 
@@ -99,12 +125,25 @@ export function ReportsView() {
   )
 }
 
-function RecapSections({ month, data }: { month: MonthKey; data: ReportData }) {
+function RecapSections({
+  month,
+  data,
+  posyandu,
+}: {
+  month: MonthKey
+  data: ReportData
+  posyandu: string | null
+}) {
   // Promise di-cache di modul, jadi `use` tidak membuat permintaan berulang.
   const refs = use(loadWho2006References())
   const recap = useMemo(
     () => computeRecapForMonth(month, data.children, data.measurements, refs),
     [month, data, refs]
+  )
+
+  const skdn = useMemo(
+    () => computeSkdnForMonth(month, data.children, data.measurements),
+    [month, data]
   )
 
   return (
@@ -115,11 +154,15 @@ function RecapSections({ month, data }: { month: MonthKey; data: ReportData }) {
         </h2>
         <ExportRecapButton
           recap={recap}
+          skdn={skdn}
+          posyandu={posyandu}
           referenceVersion={describeReferenceVersion(refs.metadata)}
         />
       </div>
 
       <CoverageSummary recap={recap} />
+
+      <SkdnSummary skdn={skdn} />
 
       <section aria-labelledby="status-heading" className="space-y-3">
         <h2 id="status-heading" className="font-heading text-2xl font-semibold">

@@ -22,11 +22,14 @@ import {
   TableRow,
 } from "@/components/ui/table"
 
+import { ExportWorkbookButton } from "@/features/reports/components/export-workbook-button"
+
 import { analyzeFile, ImportAnalysisError } from "../services/analyze-file"
 import { commitImport } from "../services/commit-import"
 import type { ImportPlan } from "../services/plan-import"
 import type { ValidatedBatch } from "../validators/validate-batch"
 import { ImportIssueList } from "./import-issue-list"
+import { ImportResults } from "./import-results"
 
 type WizardState =
   | { step: "idle" }
@@ -34,7 +37,12 @@ type WizardState =
   | { step: "error"; message: string }
   | { step: "preview"; validated: ValidatedBatch }
   | { step: "saving"; validated: ValidatedBatch }
-  | { step: "done"; plan: ImportPlan; fileName: string }
+  | {
+      step: "done"
+      plan: ImportPlan
+      fileName: string
+      validated: ValidatedBatch
+    }
 
 export function ImportWizard() {
   const [state, setState] = useState<WizardState>({ step: "idle" })
@@ -59,7 +67,12 @@ export function ImportWizard() {
     try {
       const { getDb } = await import("@/infrastructure/storage/db")
       const plan = await commitImport(getDb(), validated)
-      setState({ step: "done", plan, fileName: validated.fileName })
+      setState({
+        step: "done",
+        plan,
+        fileName: validated.fileName,
+        validated,
+      })
     } catch {
       // Pesan error database bisa memuat nilai kunci (NIK), jadi tidak ditampilkan.
       setState({
@@ -91,7 +104,8 @@ export function ImportWizard() {
           <CardHeader>
             <CardTitle>Pilih file Excel</CardTitle>
             <CardDescription>
-              Format Ukur Master Bu Bidan (.xlsx atau .xls). Maksimal 20 MB.
+              Format Ukur Master Bu Bidan, sheet Posyandu (P1–P10), atau sheet
+              PSG ASP Karangtawar (.xlsx atau .xls). Maksimal 20 MB.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -122,6 +136,41 @@ export function ImportWizard() {
         </Card>
       )}
 
+      {(state.step === "idle" ||
+        state.step === "reading" ||
+        state.step === "error") && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Template Excel</CardTitle>
+            <CardDescription>
+              Template kosong untuk diisi lalu diimpor di sini. Berisi petunjuk
+              pengisian, tanpa anak atau angka contoh.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-wrap gap-2">
+            <ExportWorkbookButton
+              label="Unduh template PSG bulanan"
+              fileName="template-psg.xlsx"
+              build={async () => {
+                // Berkas statis bergaya dari public/; tidak memuat data apa pun.
+                const response = await fetch("/templates/template-psg.xlsx")
+                if (!response.ok) throw new Error("Template tidak ditemukan.")
+                return new Uint8Array(await response.arrayBuffer())
+              }}
+            />
+            <ExportWorkbookButton
+              label="Unduh template sheet Posyandu (P1)"
+              fileName="template-posyandu-p1.xlsx"
+              build={async () => {
+                const { buildP1Template } =
+                  await import("@/infrastructure/excel/p1-workbook")
+                return buildP1Template()
+              }}
+            />
+          </CardContent>
+        </Card>
+      )}
+
       {(state.step === "preview" || state.step === "saving") && (
         <Preview
           validated={state.validated}
@@ -132,7 +181,12 @@ export function ImportWizard() {
       )}
 
       {state.step === "done" && (
-        <Done plan={state.plan} fileName={state.fileName} onReset={reset} />
+        <Done
+          plan={state.plan}
+          fileName={state.fileName}
+          validated={state.validated}
+          onReset={reset}
+        />
       )}
     </div>
   )
@@ -272,10 +326,12 @@ function Preview({
 function Done({
   plan,
   fileName,
+  validated,
   onReset,
 }: {
   plan: ImportPlan
   fileName: string
+  validated: ValidatedBatch
   onReset: () => void
 }) {
   const { summary } = plan
@@ -307,6 +363,8 @@ function Done({
           value={summary.measurementsDuplicate}
         />
       </div>
+
+      <ImportResults validated={validated} />
 
       {conflicts > 0 && (
         <Card>

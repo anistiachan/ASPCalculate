@@ -22,6 +22,10 @@ export class OpenAspDatabase extends Dexie {
         "id, childId, measuredAt, &[childId+measuredAt], importBatchId",
       importBatches: "id, importedAt",
     })
+    // Versi 2: kunci impor non-NIK dan Posyandu (kolom opsional, data lama tetap berlaku).
+    this.version(2).stores({
+      children: "id, &sourceKey, &importKey, birthDate, posyandu",
+    })
   }
 }
 

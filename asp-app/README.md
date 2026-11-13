@@ -2,7 +2,7 @@
 
 Aplikasi web untuk pencatatan Posyandu dan pemantauan antropometri balita (0–60 bulan). Terinspirasi dari alur kerja workbook ASP di lapangan, tetapi perhitungan gizi mengacu pada standar resmi (Permenkes No. 2 Tahun 2020 dan WHO Child Growth Standards 2006).
 
-> **Status: Phase 4 selesai secara teknis, menunggu tinjauan tenaga kesehatan dan definisi SKDN.** Sudah ada import Excel, pencatatan balita dan pengukuran, pencarian dan filter, perhitungan z-score dan status gizi (BB/U, TB/U, BB/PB-TB, IMT/U) menurut Permenkes 2/2020 dengan acuan WHO 2006, dashboard, serta laporan bulanan yang bisa diunduh sebagai Excel. SKDN, ASI eksklusif, kelas ibu, MBG, dan rekap per Posyandu belum ada karena definisi atau datanya belum ditetapkan (lihat [`../docs/OPENASP-DEFINISI-LAPORAN.md`](../docs/OPENASP-DEFINISI-LAPORAN.md)).
+> **Status: Phase 4 selesai secara teknis, menunggu tinjauan tenaga kesehatan dan definisi SKDN.** Sudah ada import Excel, pencatatan balita dan pengukuran, pencarian dan filter, perhitungan z-score dan status gizi (BB/U, TB/U, BB/PB-TB, IMT/U) menurut Permenkes 2/2020 dengan acuan WHO 2006, dashboard, laporan bulanan yang bisa diunduh sebagai Excel, dan Daftar Pantauan (balita pendek, kurus, BGM, bermasalah, serta sasaran Vitamin A dan ASI). SKDN tampil sebagai draf menurut rumus workbook asli (S/sasaran belum ada sumbernya); ASI eksklusif, kelas ibu, MBG, dan rekap per Posyandu belum ada karena definisi atau datanya belum tersedia (lihat [`../docs/OPENASP-DEFINISI-LAPORAN.md`](../docs/OPENASP-DEFINISI-LAPORAN.md)).
 >
 > **Hasil perhitungan belum divalidasi oleh tenaga kesehatan** dan setiap hasil di layar menampilkan peringatan itu. Aplikasi ini belum boleh dipakai untuk keputusan layanan gizi. Daftar keputusan yang perlu ditinjau ada di [`../docs/OPENASP-VALIDASI-ANTROPOMETRI.md`](../docs/OPENASP-VALIDASI-ANTROPOMETRI.md).
 
@@ -36,20 +36,21 @@ Untuk mencoba import, gunakan file contoh sintetis di [`samples/`](samples/READM
 
 ## Perintah
 
-| Perintah                   | Fungsi                                                              |
-| -------------------------- | ------------------------------------------------------------------- |
-| `npm run dev`              | Server pengembangan                                                 |
-| `npm run build`            | Build produksi                                                      |
-| `npm run start`            | Menjalankan hasil build                                             |
-| `npm run lint`             | ESLint                                                              |
-| `npm run typecheck`        | Pemeriksaan tipe (membuat tipe rute Next.js lebih dulu)             |
-| `npm test`                 | Tes unit dan integrasi (Vitest)                                     |
-| `npm run test:watch`       | Tes unit dalam mode watch                                           |
-| `npm run test:e2e`         | Tes end-to-end di browser (Playwright). Jalankan `build` dulu.      |
-| `npm run format`           | Merapikan kode dengan Prettier                                      |
-| `npm run format:check`     | Memeriksa format tanpa mengubah file                                |
-| `npm run samples:generate` | Membuat ulang file contoh Excel di `samples/`                       |
-| `npm run who:import`       | Mengunduh dan memvalidasi tabel referensi WHO 2006 (lihat di bawah) |
+| Perintah                   | Fungsi                                                                 |
+| -------------------------- | ---------------------------------------------------------------------- |
+| `npm run dev`              | Server pengembangan                                                    |
+| `npm run build`            | Build produksi                                                         |
+| `npm run start`            | Menjalankan hasil build                                                |
+| `npm run lint`             | ESLint                                                                 |
+| `npm run typecheck`        | Pemeriksaan tipe (membuat tipe rute Next.js lebih dulu)                |
+| `npm test`                 | Tes unit dan integrasi (Vitest)                                        |
+| `npm run test:watch`       | Tes unit dalam mode watch                                              |
+| `npm run test:e2e`         | Tes end-to-end di browser (Playwright). Jalankan `build` dulu.         |
+| `npm run format`           | Merapikan kode dengan Prettier                                         |
+| `npm run format:check`     | Memeriksa format tanpa mengubah file                                   |
+| `npm run samples:generate` | Membuat ulang file contoh Excel di `samples/`                          |
+| `npm run karangtawar:slim` | Meringkas workbook ASP Karangtawar asli (puluhan MB) agar bisa diimpor |
+| `npm run who:import`       | Mengunduh dan memvalidasi tabel referensi WHO 2006 (lihat di bawah)    |
 
 Sebelum commit, jalankan `format:check`, `typecheck`, `lint`, `test`, `build`, lalu `test:e2e`.
 
@@ -119,7 +120,7 @@ Beberapa komponen di `src/components/ui/` sudah disesuaikan (kontras AA, ukuran 
 | 4     | Dashboard dan laporan bulanan        | Teknis selesai; **SKDN menunggu definisi dari pemilik** |
 | 5     | PWA, hardening, deployment           | Belum                                                   |
 
-Belum dikerjakan: adapter ASP Karangtawar, layar penyelesaian konflik import, backup dan restore data, serta grafik kurva dan pemantauan tren pertumbuhan.
+Adapter ASP Karangtawar (sheet P1–P10 dan sheet PSG bulanan) sudah ada, begitu pula template Excel, hasil pemeriksaan setelah impor, alur ukur ulang, rekap format P1, serta cadangkan dan pulihkan data (halaman Pengaturan, berkas JSON yang hanya menambah data); lihat [`../docs/OPENASP-MAPPING-KARANGTAWAR-v0.1.md`](../docs/OPENASP-MAPPING-KARANGTAWAR-v0.1.md). Belum dikerjakan: ekspor e-PPGBM, layar penyelesaian konflik import, enkripsi berkas cadangan, serta grafik kurva dan pemantauan tren pertumbuhan.
 
 ## Disclaimer
 

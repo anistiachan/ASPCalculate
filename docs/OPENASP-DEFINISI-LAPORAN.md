@@ -23,14 +23,13 @@ Berisi sheet Ringkasan, Status Gizi, Vitamin A, dan Catatan. Hanya angka agregat
 
 ## Belum tersedia (dan alasannya)
 
-- **SKDN (S, K, D, N):** definisi dan cara hitungnya belum ditetapkan pemilik. Tidak ditebak. Yang tampil hanya angka dasar (terdata, ditimbang).
+- **SKDN resmi:** K, D, D2, D25, N, T, O, B, 2T tampil sebagai **draf** menurut rumus workbook asli ([OPENASP-MAPPING-SKDN-v0.2.md](OPENASP-MAPPING-SKDN-v0.2.md)), belum disetujui Bidan. **S (sasaran)** tidak ada sumbernya sehingga tidak dihitung dan tidak disamakan dengan K.
 - **ASI eksklusif, kelas ibu, MBG:** data belum ada di sumber (workbook Bu Bidan) atau definisinya belum dikonfirmasi.
 - **Rekap per Posyandu:** data belum memuat nama Posyandu.
-- **Pemantauan kenaikan berat badan antar bulan.**
 
 ## Yang dibutuhkan untuk melanjutkan
 
-1. Definisi S, K, D, N dari pemilik/Bidan (termasuk usia sasaran dan aturan hitung).
+1. Sumber S (sasaran) dan persetujuan Bidan atas aturan SKDN draf (daftar di bagian "Masih perlu dikonfirmasi" pada mapping v0.2).
 2. Konfirmasi sumber data ASI eksklusif, kelas ibu, MBG, dan nama Posyandu.
 3. Tinjauan tertulis tenaga kesehatan atas `OPENASP-VALIDASI-ANTROPOMETRI.md`.
 

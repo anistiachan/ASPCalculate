@@ -58,8 +58,15 @@ export type SourceLocation = {
  * tidak diimpor.
  */
 export type ImportedChild = {
-  /** NIK, hanya dipakai untuk mencocokkan data saat import. */
+  /**
+   * Kunci pencocokan saat import: NIK (`keyKind` "nik") atau, bila sumber tidak punya NIK
+   * yang andal, gabungan Posyandu + nama + tanggal lahir (`keyKind` "composite").
+   */
   sourceKey: string
+  /** Bawaan "nik". */
+  keyKind?: "nik" | "composite"
+  /** Nama Posyandu bila sumber memilikinya. */
+  posyandu?: string | null
   name: string
   birthDate: string
   sex: Sex

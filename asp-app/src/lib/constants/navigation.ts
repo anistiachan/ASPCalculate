@@ -3,6 +3,7 @@ import {
   FileBarChart,
   FileUp,
   LayoutDashboard,
+  ListChecks,
   Ruler,
   Settings,
   type LucideIcon,
@@ -71,6 +72,15 @@ export const NAV_ITEMS: readonly NavItem[] = [
     tone: "lavender",
     plannedPhase: "Phase 4",
     description: "Rekap bulanan, SKDN, dan ekspor.",
+  },
+  {
+    title: "Daftar Pantauan",
+    href: "/lists",
+    icon: ListChecks,
+    tone: "green",
+    plannedPhase: "Phase 4",
+    description:
+      "Daftar balita pendek, kurus, BGM, bermasalah, serta sasaran Vitamin A dan ASI.",
   },
   {
     title: "Pengaturan",

@@ -12,6 +12,13 @@ export type StoredChild = {
    * anak yang punya NIK dan beberapa anak tanpa NIK tidak saling bentrok.
    */
   sourceKey: string | null
+  /**
+   * Kunci pencocokan import untuk sumber tanpa NIK andal (Posyandu + nama + tanggal lahir).
+   * Bukan NIK dan tidak boleh ditampilkan sebagai NIK. Unik bila ada.
+   */
+  importKey?: string | null
+  /** Nama Posyandu, bila diketahui. */
+  posyandu?: string | null
   name: string
   birthDate: string
   sex: Sex

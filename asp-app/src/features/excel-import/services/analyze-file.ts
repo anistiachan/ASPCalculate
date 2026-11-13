@@ -29,7 +29,7 @@ export async function analyzeFile(file: File): Promise<ValidatedBatch> {
   const adapter = detectAdapter(workbook)
   if (!adapter) {
     throw new ImportAnalysisError(
-      "Format file belum dikenali. Saat ini yang didukung adalah Format Ukur Master Bu Bidan (sheet 'Tambah Balita' dan sheet bulan)."
+      "Format file belum dikenali. Yang didukung: Format Ukur Master Bu Bidan (sheet 'Tambah Balita' dan sheet bulan) dan ASP Karangtawar (sheet P1–P10)."
     )
   }
 

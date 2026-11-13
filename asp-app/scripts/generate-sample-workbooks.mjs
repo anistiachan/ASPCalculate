@@ -370,6 +370,114 @@ function buildProblematicWorkbook() {
   return book
 }
 
+// --- Format ASP Karangtawar (sheet Posyandu P1…P10) ------------------------------------
+// Hanya kolom yang dibaca adapter (src/features/excel-import/adapters/karangtawar/layout.ts).
+
+function columnIndex(letters) {
+  let n = 0
+  for (const ch of letters) n = n * 26 + (ch.charCodeAt(0) - 64)
+  return n - 1
+}
+
+function posyanduSheet(rows) {
+  const grid = Array.from({ length: 308 }, () =>
+    Array.from({ length: 73 }, () => null)
+  )
+  grid[6][columnIndex("L")] = "NAMA POSYANDU"
+  grid[6][columnIndex("N")] = "NAMA ANAK"
+  rows.forEach((cells, i) => {
+    for (const [letters, value] of Object.entries(cells)) {
+      grid[8 + i][columnIndex(letters)] = value
+    }
+  })
+  return XLSX.utils.aoa_to_sheet(grid)
+}
+
+// Tahun data 2026 (kolom R = 26), hari timbang 14. Kolom BB: AE=Jan, AH=Feb, AO=Mar.
+// `extra`: sel tambahan per kolom, mis. Vitamin A biru (AJ), merah (AK), ASI-E ya (AL) pada Februari.
+function karangtawarChild(posyandu, name, sex, birth, weights, extra = {}) {
+  const [year, month, day] = birth.split("-").map(Number)
+  return {
+    L: posyandu,
+    N: name,
+    O: sex === "M" ? 1 : 2,
+    D: 1,
+    E: 3,
+    F: 49,
+    P: 14,
+    R: 26,
+    S: day,
+    T: month,
+    U: year - 2000,
+    AE: weights[0] ?? null,
+    AH: weights[1] ?? null,
+    AO: weights[2] ?? null,
+    ...extra,
+  }
+}
+
+function buildKarangtawarWorkbook() {
+  const book = XLSX.utils.book_new()
+  XLSX.utils.book_append_sheet(
+    book,
+    posyanduSheet([
+      karangtawarChild(
+        "JERUK",
+        "Anak Contoh A",
+        "M",
+        "2025-01-05",
+        [9.8, 10.1, 10.2],
+        { AK: 1 }
+      ),
+      karangtawarChild(
+        "JERUK",
+        "Anak Contoh B",
+        "F",
+        "2025-06-20",
+        [8.0, 8.2, 8.4],
+        { AJ: 1 }
+      ),
+      karangtawarChild("JERUK", "Anak Contoh C", "M", "2023-02-14", [
+        13.0,
+        null,
+        13.5,
+      ]),
+      karangtawarChild("JERUK", "Anak Contoh D", "F", "2024-09-01", [
+        null,
+        11.0,
+        null,
+      ]),
+    ]),
+    "P1"
+  )
+  XLSX.utils.book_append_sheet(
+    book,
+    posyanduSheet([
+      karangtawarChild(
+        "PEPAYA",
+        "Anak Contoh E",
+        "M",
+        "2025-10-10",
+        [6.0, 6.9, 7.5],
+        { AL: 1 }
+      ),
+      karangtawarChild("PEPAYA", "Anak Contoh F", "F", "2022-12-01", [
+        14.0,
+        14.1,
+        null,
+      ]),
+    ]),
+    "P2"
+  )
+  XLSX.utils.book_append_sheet(book, posyanduSheet([]), "P3")
+  XLSX.utils.book_append_sheet(
+    book,
+    XLSX.utils.aoa_to_sheet([["SKDN"]]),
+    "SKDN"
+  )
+  return book
+}
+
 function writeBook(book, fileName, bookType) {
   const buffer = XLSX.write(book, { type: "buffer", bookType })
   writeFileSync(join(OUTPUT_DIR, fileName), buffer)
@@ -380,3 +488,4 @@ mkdirSync(OUTPUT_DIR, { recursive: true })
 writeBook(buildValidWorkbook(), "contoh-bu-bidan-valid.xlsx", "xlsx")
 writeBook(buildValidWorkbook(), "contoh-bu-bidan-valid.xls", "biff8")
 writeBook(buildProblematicWorkbook(), "contoh-bu-bidan-bermasalah.xlsx", "xlsx")
+writeBook(buildKarangtawarWorkbook(), "contoh-karangtawar.xlsx", "xlsx")

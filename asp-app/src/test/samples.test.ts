@@ -3,7 +3,10 @@ import { join } from "node:path"
 
 import { describe, expect, it } from "vitest"
 
+import { indexMeasurementsByChild } from "@/domain/reporting/monthly-recap"
+import { buildSkdn, SKDN_CODES } from "@/domain/reporting/skdn"
 import { detectAdapter } from "@/features/excel-import/adapters"
+import { planImport } from "@/features/excel-import/services/plan-import"
 import { validateBatch } from "@/features/excel-import/validators/validate-batch"
 import { readWorkbook } from "@/infrastructure/excel/workbook-reader"
 
@@ -142,5 +145,80 @@ describe("contoh-bu-bidan-bermasalah.xlsx", () => {
     expect(messages).not.toMatch(/3200\d{12}/)
     expect(messages).not.toContain("Anak Contoh")
     expect(messages).not.toContain("Nama Yang Berbeda")
+  })
+})
+
+describe("contoh-karangtawar.xlsx", () => {
+  const bytes = readFileSync(
+    join(process.cwd(), "samples", "contoh-karangtawar.xlsx")
+  )
+  const workbook = readWorkbook(new Uint8Array(bytes))
+  const adapter = detectAdapter(workbook)
+  const validated = validateBatch(
+    adapter!.parse(workbook, "contoh-karangtawar.xlsx")
+  )
+
+  it("dikenali sebagai format ASP Karangtawar dan diimpor tanpa error", () => {
+    expect(adapter?.id).toBe("asp-karangtawar")
+    expect(validated.counts.errors).toBe(0)
+    expect(validated.children).toHaveLength(6)
+    expect(validated.measurements).toHaveLength(14)
+    expect(validated.skippedSheets.map((s) => s.name).sort()).toEqual([
+      "P3",
+      "SKDN",
+    ])
+  })
+
+  it("SKDN Januari–Maret 2026 sesuai hitungan tangan (draf)", () => {
+    let counter = 0
+    const plan = planImport(
+      validated,
+      { children: [], measurements: [] },
+      {
+        batchId: "b",
+        now: "2026-01-01T00:00:00.000Z",
+        newId: () => `id${++counter}`,
+      }
+    )
+    const byChild = indexMeasurementsByChild(plan.newMeasurements)
+    const all = (month: string) => {
+      const { counts } = buildSkdn(month, plan.newChildren, byChild)
+      return Object.fromEntries(
+        SKDN_CODES.map((code) => [code, counts[code].ALL])
+      )
+    }
+    expect(all("2026-01")).toEqual({
+      K: 5,
+      D2: 3,
+      D25: 2,
+      D: 5,
+      N: 0,
+      T: 0,
+      O: 0,
+      B: 5,
+      T2: 0,
+    })
+    expect(all("2026-02")).toEqual({
+      K: 6,
+      D2: 4,
+      D25: 1,
+      D: 5,
+      N: 2,
+      T: 2,
+      O: 0,
+      B: 1,
+      T2: 0,
+    })
+    expect(all("2026-03")).toEqual({
+      K: 6,
+      D2: 3,
+      D25: 1,
+      D: 4,
+      N: 1,
+      T: 2,
+      O: 1,
+      B: 0,
+      T2: 1,
+    })
   })
 })

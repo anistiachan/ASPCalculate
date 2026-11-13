@@ -26,16 +26,15 @@ export function DefinitionsNotice() {
         <p className="mt-3 font-semibold">Belum tersedia:</p>
         <ul className="list-disc space-y-1 pl-5">
           <li>
-            SKDN (S, K, D, N): definisinya belum ditetapkan pemilik program,
-            sehingga tidak ditebak. Yang tampil di sini adalah angka dasarnya
-            (terdata dan ditimbang).
+            SKDN resmi: S (sasaran) belum ada sumbernya sehingga tidak dihitung
+            dan tidak disamakan dengan K. K, D, N, T, O, B, dan 2T tampil
+            sebagai draf menurut rumus workbook, belum disetujui pemilik proses.
           </li>
           <li>
             ASI eksklusif, kelas ibu balita, dan MBG: arti kolom di sumber belum
             dikonfirmasi.
           </li>
           <li>Rekap per Posyandu: data belum memuat nama Posyandu.</li>
-          <li>Pemantauan kenaikan berat badan antar bulan.</li>
         </ul>
       </AlertDescription>
     </Alert>

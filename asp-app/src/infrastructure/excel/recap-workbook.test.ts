@@ -13,6 +13,7 @@ import {
   STATUS_INDICATORS,
 } from "@/domain/reporting/status-groups"
 import { computeRecapForMonth } from "@/features/reports/services/recap-for-month"
+import { computeSkdnForMonth } from "@/features/reports/services/skdn-for-month"
 
 import { buildRecapWorkbook, type RecapWorkbookMeta } from "./recap-workbook"
 
@@ -223,5 +224,29 @@ describe("buildRecapWorkbook", () => {
     expect(text).toContain("WHO-2006 expanded tables (uji)")
     expect(text).toContain("SKDN")
     expect(text).toContain("2026-11-13")
+  })
+
+  it("menambah sheet SKDN (Draf) berlabel draf bila rekap SKDN diberikan", () => {
+    const children = [
+      child("1", "M", "2025-01-10"),
+      child("2", "F", "2025-02-10"),
+    ]
+    const ms = [measurement("1", "2026-06-05"), measurement("2", "2026-06-06")]
+    const skdn = computeSkdnForMonth("2026-06", children, ms)
+    const book = XLSX.read(buildRecapWorkbook(buildRecap(), META, skdn), {
+      type: "array",
+    })
+    expect(book.SheetNames).toEqual([
+      "Ringkasan",
+      "Status Gizi",
+      "Vitamin A",
+      "SKDN (Draf)",
+      "Catatan",
+    ])
+    const rows = rowsOf(book, "SKDN (Draf)")
+    expect(String(rows[0][0])).toContain("DRAF")
+    expect(rows.find((r) => r[0] === "S")?.slice(2, 5)).toEqual(["–", "–", "–"])
+    expect(rows.find((r) => r[0] === "D")?.slice(2, 5)).toEqual([1, 1, 2])
+    expect(rows.find((r) => r[0] === "B")?.slice(2, 5)).toEqual([1, 1, 2])
   })
 })

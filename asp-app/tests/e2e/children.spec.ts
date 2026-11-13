@@ -98,7 +98,8 @@ test.describe("tambah dan ubah balita", () => {
       sex: "Laki-laki",
     })
     await expect(page.getByText("Dicatat manual")).toBeVisible()
-    await expect(page.getByText("Tidak diisi")).toBeVisible()
+    // NIK dan Posyandu sama-sama belum diisi pada anak manual.
+    await expect(page.getByText("Tidak diisi")).toHaveCount(2)
 
     await page.getByRole("link", { name: "Ubah data" }).click()
     await expect(byLabel(page, "Nama", { exact: false })).toHaveValue(

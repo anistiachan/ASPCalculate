@@ -109,7 +109,8 @@ export function planImport(
   // Anak yang ditambah manual tanpa NIK tidak bisa dicocokkan dari file, jadi dilewati.
   const childByKey = new Map<string, StoredChild>()
   for (const child of existing.children) {
-    if (child.sourceKey !== null) childByKey.set(child.sourceKey, child)
+    if (child.sourceKey) childByKey.set(child.sourceKey, child)
+    if (child.importKey) childByKey.set(child.importKey, child)
   }
   const conflictedKeys = new Set<string>()
   const newChildren: StoredChild[] = []
@@ -117,9 +118,12 @@ export function planImport(
   for (const incoming of validated.children) {
     const current = childByKey.get(incoming.sourceKey)
     if (!current) {
+      const isComposite = incoming.keyKind === "composite"
       const stored: StoredChild = {
         id: options.newId(),
-        sourceKey: incoming.sourceKey,
+        sourceKey: isComposite ? null : incoming.sourceKey,
+        importKey: isComposite ? incoming.sourceKey : null,
+        posyandu: incoming.posyandu ?? null,
         name: incoming.name,
         birthDate: incoming.birthDate,
         sex: incoming.sex,
@@ -142,7 +146,7 @@ export function planImport(
         severity: "error",
         code: "CHILD_CONFLICT",
         message:
-          "Anak dengan NIK ini sudah tersimpan dengan data berbeda; data lama dipertahankan dan baris dilewati.",
+          "Anak dengan kunci ini (NIK atau nama + tanggal lahir + Posyandu) sudah tersimpan dengan data berbeda; data lama dipertahankan dan baris dilewati.",
         sheet: incoming.source.sheet,
         row: incoming.source.row,
       })

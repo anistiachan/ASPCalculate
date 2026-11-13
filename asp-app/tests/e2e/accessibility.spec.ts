@@ -78,6 +78,30 @@ test.describe("aksesibilitas (WCAG 2.2 AA)", () => {
     await expectNoViolations(page, "laporan bulanan")
   })
 
+  test("daftar balita berisi data: tombol pilihan dan tabel", async ({
+    page,
+  }) => {
+    await page.clock.setFixedTime(new Date("2026-11-13T10:00:00"))
+    await importAndSaveValidSample(page)
+    await page.goto("/lists")
+    await byLabel(page, "Bulan").selectOption({ label: "Juni" })
+    await byLabel(page, "Tahun").selectOption("2026")
+    await page.getByRole("button", { name: /^Pendek \(\d+\)$/ }).click()
+    await expect(
+      page.getByRole("heading", { name: "Pendek · Juni 2026" })
+    ).toBeVisible()
+    await expectNoViolations(page, "daftar balita")
+  })
+
+  test("pengaturan: cadangkan dan pulihkan data", async ({ page }) => {
+    await importAndSaveValidSample(page)
+    await page.goto("/settings")
+    await expect(
+      page.getByRole("heading", { level: 2, name: "Cadangkan data" })
+    ).toBeVisible()
+    await expectNoViolations(page, "pengaturan")
+  })
+
   test("laporan bulanan tanpa data", async ({ page }) => {
     await page.goto("/reports")
     await expect(

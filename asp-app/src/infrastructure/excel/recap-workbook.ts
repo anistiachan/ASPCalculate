@@ -7,6 +7,11 @@ import {
   INDICATOR_NAMES,
   STATUS_INDICATORS,
 } from "@/domain/reporting/status-groups"
+import {
+  SKDN_CODES,
+  SKDN_LABELS,
+  type SkdnMonthly,
+} from "@/domain/reporting/skdn"
 import { formatMonth } from "@/lib/format/format"
 
 export type RecapWorkbookMeta = {
@@ -16,6 +21,8 @@ export type RecapWorkbookMeta = {
   referenceVersion: string
   /** Apakah mesin antropometri sudah divalidasi tenaga kesehatan. */
   validated: boolean
+  /** Cakupan laporan, mis. nama Posyandu. Kosong = semua data di perangkat. */
+  scope?: string
 }
 
 type Cell = string | number | { t: "n"; v: number; z: string }
@@ -48,7 +55,8 @@ function sheet(rows: Row[], widths: number[]): XLSX.WorkSheet {
  */
 export function buildRecapWorkbook(
   recap: MonthlyRecap,
-  meta: RecapWorkbookMeta
+  meta: RecapWorkbookMeta,
+  skdn?: SkdnMonthly
 ): Uint8Array {
   const book = XLSX.utils.book_new()
 
@@ -58,6 +66,7 @@ export function buildRecapWorkbook(
       [
         ["Rekap bulanan OpenASP"],
         ["Periode", formatMonth(recap.month)],
+        ["Posyandu", meta.scope ?? "Semua Posyandu"],
         [],
         ["Keterangan", "Laki-laki", "Perempuan", "Jumlah"],
         countRow("Balita terdata", recap.eligible),
@@ -143,6 +152,38 @@ export function buildRecapWorkbook(
     "Vitamin A"
   )
 
+  if (skdn) {
+    const skdnRows: Row[] = [
+      [
+        "DRAF: aturan hitung mengikuti rumus workbook ASP Karangtawar 2025 dan belum disetujui pemilik proses/Bidan. Bukan laporan resmi.",
+      ],
+      [],
+      ["Kode", "Keterangan", "Laki-laki", "Perempuan", "Jumlah"],
+      [
+        "S",
+        "Sasaran: sumbernya belum ditemukan, tidak dihitung",
+        "–",
+        "–",
+        "–",
+      ],
+    ]
+    for (const code of SKDN_CODES) {
+      const counts = skdn.counts[code]
+      skdnRows.push([
+        SKDN_LABELS[code].code,
+        SKDN_LABELS[code].label,
+        counts.M,
+        counts.F,
+        counts.ALL,
+      ])
+    }
+    XLSX.utils.book_append_sheet(
+      book,
+      sheet(skdnRows, [8, 52, 12, 12, 12]),
+      "SKDN (Draf)"
+    )
+  }
+
   const notes: Row[] = [
     ["Catatan"],
     [
@@ -169,7 +210,7 @@ export function buildRecapWorkbook(
     ],
     [],
     [
-      "Belum tersedia: SKDN (definisi S, K, D, N belum ditetapkan), ASI eksklusif, kelas ibu balita, MBG, dan rekap per Posyandu.",
+      "Belum tersedia: SKDN resmi (S belum ada sumbernya; K, D, N, T, O, B, 2T hanya draf), ASI eksklusif, kelas ibu balita, MBG, dan rekap per Posyandu.",
     ],
     [],
     [

@@ -195,13 +195,43 @@ test.describe("laporan bulanan", () => {
     ).toBeVisible()
   })
 
+  test("SKDN draf: berlabel draf, S tidak dihitung, D = D2 + D25", async ({
+    page,
+  }) => {
+    await openWithSampleData(page, "/reports")
+    await selectMonth(page, "Juni", "2026")
+    await expect(
+      page.getByRole("heading", { name: "SKDN (draf)" })
+    ).toBeVisible()
+    await expect(
+      page.getByText("SKDN: draf, belum disetujui Bidan")
+    ).toBeVisible()
+
+    const skdn = card(page, "Penimbangan dan kenaikan berat badan")
+    await expect(
+      skdn.getByRole("row", { name: /^S Sasaran: sumbernya belum ditemukan/ })
+    ).toContainText("–")
+
+    const total = async (code: string) => {
+      const row = skdn.getByRole("row", { name: new RegExp(`^${code} `) })
+      return Number(await row.locator("td").last().innerText())
+    }
+    const d = await total("D")
+    expect(d).toBe(9) // 9 anak ditimbang pada Juni 2026
+    expect((await total("D2")) + (await total("D25"))).toBe(d)
+    // Penimbangan sebelumnya Januari: tidak ada pembanding bulan lalu → tidak ada N atau T.
+    expect(await total("N")).toBe(0)
+    expect(await total("T")).toBe(0)
+    expect(await total("O")).toBeGreaterThan(0)
+  })
+
   test("menjelaskan cara membaca laporan dan apa yang belum tersedia, tanpa menebak SKDN", async ({
     page,
   }) => {
     await openWithSampleData(page, "/reports")
     await expect(page.getByText("Cara membaca laporan ini")).toBeVisible()
     await expect(
-      page.getByText(/SKDN \(S, K, D, N\): definisinya belum ditetapkan/)
+      page.getByText(/SKDN resmi: S \(sasaran\) belum ada sumbernya/)
     ).toBeVisible()
     await expect(
       page.getByText(/Rekap per Posyandu: data belum memuat nama Posyandu/)
@@ -229,6 +259,7 @@ test.describe("laporan bulanan", () => {
       "Ringkasan",
       "Status Gizi",
       "Vitamin A",
+      "SKDN (Draf)",
       "Catatan",
     ])
 

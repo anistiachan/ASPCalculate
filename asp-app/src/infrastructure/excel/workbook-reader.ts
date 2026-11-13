@@ -32,7 +32,9 @@ export function readWorkbook(data: ArrayBuffer | Uint8Array): WorkbookData {
   const byteLength = data.byteLength
   if (byteLength === 0) throw new WorkbookReadError("File kosong.")
   if (byteLength > MAX_IMPORT_FILE_BYTES) {
-    throw new WorkbookReadError("Ukuran file terlalu besar (maksimal 20 MB).")
+    throw new WorkbookReadError(
+      "Ukuran file terlalu besar (maksimal 20 MB). Untuk workbook ASP Karangtawar asli (puluhan MB) buat berkas ringkas dengan `npm run karangtawar:slim` lalu impor berkas itu."
+    )
   }
 
   if (!isExcelFile(new Uint8Array(data))) {

@@ -138,6 +138,9 @@ function ChildDetailView({
                 "Tidak diisi"
               )}
             </ProfileItem>
+            <ProfileItem label="Posyandu">
+              {child.posyandu ?? "Tidak diisi"}
+            </ProfileItem>
             <ProfileItem label="Asal data">
               {child.importBatchId ? "Import Excel" : "Dicatat manual"}
             </ProfileItem>

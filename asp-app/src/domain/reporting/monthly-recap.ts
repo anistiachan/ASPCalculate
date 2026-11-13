@@ -24,9 +24,9 @@ export const SEX_GROUPS: readonly SexGroup[] = ["M", "F", "ALL"]
 
 export type SexCounts = Record<SexGroup, number>
 
-const emptyCounts = (): SexCounts => ({ M: 0, F: 0, ALL: 0 })
+export const emptyCounts = (): SexCounts => ({ M: 0, F: 0, ALL: 0 })
 
-function bump(counts: SexCounts, sex: Sex): void {
+export function bump(counts: SexCounts, sex: Sex): void {
   counts[sex]++
   counts.ALL++
 }

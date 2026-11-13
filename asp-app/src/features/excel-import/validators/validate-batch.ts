@@ -1,3 +1,5 @@
+import { checkPlausibility } from "@/domain/measurement/plausibility"
+
 import type {
   ImportedChild,
   ImportedMeasurement,
@@ -54,7 +56,7 @@ export function validateBatch(batch: ImportBatch): ValidatedBatch {
         severity: "error",
         code: "CHILD_DUPLICATE_KEY",
         message:
-          "NIK muncul lebih dari sekali pada data induk; identitas anak ambigu.",
+          "Kunci anak (NIK atau nama + tanggal lahir + Posyandu) muncul lebih dari sekali; identitas anak ambigu.",
         sheet: child.source.sheet,
         row: child.source.row,
         field: "nik",
@@ -77,7 +79,7 @@ export function validateBatch(batch: ImportBatch): ValidatedBatch {
         severity: "error",
         code: "CHILD_NOT_FOUND",
         message:
-          "NIK tidak ditemukan pada data induk (atau ambigu); pengukuran tidak diimpor.",
+          "Kunci anak tidak ditemukan pada data induk (atau ambigu); pengukuran tidak diimpor.",
         sheet,
         row,
         field: "nik",
@@ -119,6 +121,30 @@ export function validateBatch(batch: ImportBatch): ValidatedBatch {
         "Tinggi/panjang harus lebih dari nol.",
         "heightCm"
       )
+    }
+
+    // Nilai di luar rentang wajar (mis. TB 814 cm, seharusnya 81,4) hanya diberi peringatan:
+    // bisa jadi salah ketik, tetapi tidak ditolak dan tidak diubah. Nol/negatif sudah ditolak di atas.
+    const plausibility = checkPlausibility({
+      weightKg:
+        measurement.weightKg !== null && measurement.weightKg > 0
+          ? measurement.weightKg
+          : null,
+      heightCm:
+        measurement.rawLengthHeightCm !== null &&
+        measurement.rawLengthHeightCm > 0
+          ? measurement.rawLengthHeightCm
+          : null,
+    })
+    for (const warning of plausibility) {
+      issues.push({
+        severity: "warning",
+        code: "INVALID_VALUE",
+        message: warning.message,
+        sheet,
+        row,
+        field: warning.field === "weightKg" ? "weightKg" : "heightCm",
+      })
     }
 
     // Konflik identitas hanya peringatan; data induk dipakai sebagai sumber utama.

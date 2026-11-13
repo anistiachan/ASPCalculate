@@ -2,11 +2,16 @@
 
 File Excel **sintetis** untuk mencoba halaman **Import Excel**. Semua nama, NIK, dan angka dibuat-buat. Angka berat dan tinggi hanya perkiraan kasar agar tampak masuk akal, bukan data pertumbuhan, dan tidak boleh dipakai sebagai acuan perhitungan.
 
-| File                              | Isi                                                                                                 |
-| --------------------------------- | --------------------------------------------------------------------------------------------------- |
-| `contoh-bu-bidan-valid.xlsx`      | 10 anak, pengukuran Januari, Juni, dan September. Seharusnya diimpor tanpa error maupun peringatan. |
-| `contoh-bu-bidan-valid.xls`       | Isi sama, format Excel lama (.xls), untuk menguji dukungan format tersebut.                         |
-| `contoh-bu-bidan-bermasalah.xlsx` | Sengaja berisi error dan peringatan agar terlihat bagaimana pratinjau menampilkannya.               |
+| File                              | Isi                                                                                                                                       |
+| --------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| `contoh-bu-bidan-valid.xlsx`      | 10 anak, pengukuran Januari, Juni, dan September. Seharusnya diimpor tanpa error maupun peringatan.                                       |
+| `contoh-bu-bidan-valid.xls`       | Isi sama, format Excel lama (.xls), untuk menguji dukungan format tersebut.                                                               |
+| `contoh-bu-bidan-bermasalah.xlsx` | Sengaja berisi error dan peringatan agar terlihat bagaimana pratinjau menampilkannya.                                                     |
+| `contoh-karangtawar.xlsx`         | Format ASP Karangtawar: 6 anak di Posyandu JERUK dan PEPAYA, penimbangan Januari–Maret 2026, Vitamin A dan ASI Februari.                  |
+| `contoh-p1-valid.xlsx`            | Template P1 yang diisi: 8 anak fiktif di JERUK dan PEPAYA, Januari–Agustus 2026, Vitamin A dan ASI-E; satu pendek dan satu sangat pendek. |
+| `contoh-p1-bermasalah.xlsx`       | Template P1 dengan sex salah, tanggal lahir 31 Februari, tanpa Posyandu/tahun, berat negatif, BB 105 dan TB 814, dan data ganda.          |
+| `contoh-psg-valid.xlsx`           | Sheet PSG bulanan (Februari 2026): 4 anak fiktif, satu pendek dan satu sangat pendek, untuk mencoba alur ukur ulang.                      |
+| `contoh-psg-bermasalah.xlsx`      | Sheet PSG dengan sex salah, tanggal lahir/timbang tidak valid, tanpa Posyandu, data ganda, dan TB 814 cm (salah ketik).                   |
 
 ## Yang bisa dicoba
 

@@ -12,8 +12,9 @@
     "test:watch": "vitest",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "samples:generate": "node scripts/generate-sample-workbooks.mjs",
+    "samples:generate": "node scripts/generate-sample-workbooks.mjs && node scripts/generate-psg-files.mjs && node scripts/generate-p1-samples.mjs",
     "test:e2e": "playwright test",
+    "karangtawar:slim": "node scripts/karangtawar-slim.mjs",
     "who:import": "node scripts/import-who-tables.mjs"
   },
   "dependencies": {
@@ -22,6 +23,7 @@
     "cn": "^0.5.2",
     "dexie": "^4.4.7",
     "dexie-react-hooks": "^4.4.0",
+    "exceljs": "^4.4.0",
     "lucide-react": "^1.72.0",
     "next": "16.4.6",
     "radix-ui": "^1.8.1",
