@@ -21,8 +21,45 @@ const numberFormatter = new Intl.NumberFormat("id-ID", {
   maximumFractionDigits: 2,
 })
 
+const monthFormatter = new Intl.DateTimeFormat("id-ID", {
+  month: "long",
+  year: "numeric",
+  timeZone: "UTC",
+})
+
+const monthShortFormatter = new Intl.DateTimeFormat("id-ID", {
+  month: "short",
+  timeZone: "UTC",
+})
+
+const percentFormatter = new Intl.NumberFormat("id-ID", {
+  style: "percent",
+  minimumFractionDigits: 0,
+  maximumFractionDigits: 1,
+})
+
 function isoToUtcDate(iso: string): Date {
   return new Date(`${iso}T00:00:00Z`)
+}
+
+/** `2026-06` → `Juni 2026`. */
+export function formatMonth(month: string): string {
+  return monthFormatter.format(isoToUtcDate(`${month}-01`))
+}
+
+/** `2026-06` → `Jun`. */
+export function formatMonthShort(month: string): string {
+  return monthShortFormatter.format(isoToUtcDate(`${month}-01`))
+}
+
+/**
+ * `0.889` → `88,9%`. Penyebut nol menghasilkan strip, bukan "0%" atau "NaN": tidak ada
+ * yang bisa dipersentasekan dari nol anak.
+ */
+export function formatPercent(numerator: number, denominator: number): string {
+  return denominator === 0
+    ? "–"
+    : percentFormatter.format(numerator / denominator)
 }
 
 /** `2025-03-15` → `15 Maret 2025`. */

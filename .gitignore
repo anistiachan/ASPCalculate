@@ -1,0 +1,4 @@
+# Workbook ASP asli berisi data pribadi anak (nama, NIK). Jangan pernah di-commit.
+docs/*.xls
+docs/*.xlsx
+docs/*.xlsm

@@ -9,7 +9,7 @@ export const metadata: Metadata = { title: "Tambah balita" }
 
 export default function NewChildPage() {
   return (
-    <div className="mx-auto w-full max-w-5xl space-y-6">
+    <div className="w-full space-y-6">
       <BackLink href="/children">Daftar balita</BackLink>
       <PageHeader
         item={getNavItem("/children")}

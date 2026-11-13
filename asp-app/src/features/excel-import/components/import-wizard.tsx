@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 
+import { StatCard as Stat } from "@/components/molecules/stat-card"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import {
@@ -21,8 +22,6 @@ import {
   TableRow,
 } from "@/components/ui/table"
 
-import { TONE_CLASSES, type Tone } from "@/lib/constants/tones"
-
 import { analyzeFile, ImportAnalysisError } from "../services/analyze-file"
 import { commitImport } from "../services/commit-import"
 import type { ImportPlan } from "../services/plan-import"
@@ -36,34 +35,6 @@ type WizardState =
   | { step: "preview"; validated: ValidatedBatch }
   | { step: "saving"; validated: ValidatedBatch }
   | { step: "done"; plan: ImportPlan; fileName: string }
-
-/**
- * Kartu angka. Warna hanya mempertegas; makna dibawa label teks, sehingga tetap
- * terbaca tanpa warna.
- */
-function Stat({
-  label,
-  value,
-  tone = "neutral",
-}: {
-  label: string
-  value: number
-  tone?: Tone
-}) {
-  return (
-    <Card size="sm" className={TONE_CLASSES[tone].panel}>
-      <CardHeader>
-        <CardDescription className="label-caps text-current">
-          {label}
-        </CardDescription>
-        {/* Varian group-data-[size=sm] diperlukan: CardTitle punya aturan ukuran sendiri untuk kartu kecil. */}
-        <CardTitle className="font-heading text-3xl font-semibold tabular-nums group-data-[size=sm]/card:text-3xl">
-          {value}
-        </CardTitle>
-      </CardHeader>
-    </Card>
-  )
-}
 
 export function ImportWizard() {
   const [state, setState] = useState<WizardState>({ step: "idle" })
@@ -103,7 +74,7 @@ export function ImportWizard() {
   const busy = state.step === "reading" || state.step === "saving"
 
   return (
-    <div className="mx-auto w-full max-w-4xl space-y-6">
+    <div className="w-full space-y-6">
       <Alert>
         <AlertTitle>Data diproses di perangkat ini</AlertTitle>
         <AlertDescription>

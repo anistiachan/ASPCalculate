@@ -13,7 +13,7 @@ type Params =
 
 export default function EditMeasurementPage({ params }: { params: Params }) {
   return (
-    <div className="mx-auto w-full max-w-5xl space-y-6">
+    <div className="w-full space-y-6">
       <PageHeader
         item={getNavItem("/measurements")}
         title="Ubah pengukuran"

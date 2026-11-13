@@ -8,7 +8,7 @@ export const metadata: Metadata = { title: "Import Excel" }
 
 export default function ImportPage() {
   return (
-    <div className="mx-auto w-full max-w-4xl space-y-6">
+    <div className="w-full space-y-6">
       <PageHeader
         item={getNavItem("/import")}
         description="Pilih file, tinjau pratinjau dan catatannya, lalu konfirmasi untuk menyimpan."

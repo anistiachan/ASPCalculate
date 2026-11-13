@@ -11,7 +11,7 @@ type Params = PageProps<"/children/[id]">["params"]
 // di dalam <Suspense>. Datanya sendiri dimuat di browser dari IndexedDB.
 export default function ChildDetailPage({ params }: { params: Params }) {
   return (
-    <div className="mx-auto w-full max-w-5xl">
+    <div className="w-full">
       <Suspense fallback={<p role="status">Memuat…</p>}>
         <Content params={params} />
       </Suspense>

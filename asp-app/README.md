@@ -2,7 +2,7 @@
 
 Aplikasi web untuk pencatatan Posyandu dan pemantauan antropometri balita (0–60 bulan). Terinspirasi dari alur kerja workbook ASP di lapangan, tetapi perhitungan gizi mengacu pada standar resmi (Permenkes No. 2 Tahun 2020 dan WHO Child Growth Standards 2006).
 
-> **Status: Phase 3 selesai secara teknis, menunggu tinjauan tenaga kesehatan.** Sudah ada import Excel, pencatatan balita dan pengukuran, pencarian dan filter, serta perhitungan z-score dan status gizi (BB/U, TB/U, BB/PB-TB, IMT/U) menurut Permenkes 2/2020 dengan acuan WHO 2006. Belum ada dashboard maupun laporan.
+> **Status: Phase 4 selesai secara teknis, menunggu tinjauan tenaga kesehatan dan definisi SKDN.** Sudah ada import Excel, pencatatan balita dan pengukuran, pencarian dan filter, perhitungan z-score dan status gizi (BB/U, TB/U, BB/PB-TB, IMT/U) menurut Permenkes 2/2020 dengan acuan WHO 2006, dashboard, serta laporan bulanan yang bisa diunduh sebagai Excel. SKDN, ASI eksklusif, kelas ibu, MBG, dan rekap per Posyandu belum ada karena definisi atau datanya belum ditetapkan (lihat [`../docs/OPENASP-DEFINISI-LAPORAN.md`](../docs/OPENASP-DEFINISI-LAPORAN.md)).
 >
 > **Hasil perhitungan belum divalidasi oleh tenaga kesehatan** dan setiap hasil di layar menampilkan peringatan itu. Aplikasi ini belum boleh dipakai untuk keputusan layanan gizi. Daftar keputusan yang perlu ditinjau ada di [`../docs/OPENASP-VALIDASI-ANTROPOMETRI.md`](../docs/OPENASP-VALIDASI-ANTROPOMETRI.md).
 
@@ -82,12 +82,14 @@ src/
 │   ├── anthropometry/        # Mesin z-score, koreksi posisi, klasifikasi Permenkes
 │   │   └── references/       # Tabel LMS WHO 2006 (dihasilkan skrip)
 │   ├── child/                # Tipe anak dan data tersimpan
-│   └── measurement/          # Pemeriksaan kewajaran nilai input
+│   ├── measurement/          # Pemeriksaan kewajaran nilai input
+│   └── reporting/            # Rekap bulanan: cakupan, sebaran status, Vitamin A
 ├── features/
 │   ├── children/             # Daftar, form, detail, hook data, skema validasi
-│   └── excel-import/         # Adapter, normalizer, validator, perencana import
+│   ├── excel-import/         # Adapter, normalizer, validator, perencana import
+│   └── reports/              # Dashboard dan laporan; grafik SVG buatan sendiri (tanpa Recharts)
 ├── infrastructure/
-│   ├── excel/                # Pembaca workbook (SheetJS)
+│   ├── excel/                # Pembaca workbook dan pembuat berkas rekap (SheetJS)
 │   └── storage/              # IndexedDB (Dexie) dan repository
 ├── lib/                      # Helper umum: tanggal, angka, format, warna
 └── test/                     # Fixture sintetis dan tes lintas modul
@@ -108,14 +110,14 @@ Beberapa komponen di `src/components/ui/` sudah disesuaikan (kontras AA, ukuran 
 
 ## Tahapan
 
-| Phase | Isi                                  | Status                                                 |
-| ----- | ------------------------------------ | ------------------------------------------------------ |
-| 0     | Fondasi proyek                       | Selesai                                                |
-| 1     | Import Excel (adapter Bu Bidan)      | Selesai                                                |
-| 2     | Data balita dan pengukuran           | Selesai                                                |
-| 3     | Mesin antropometri (WHO + Permenkes) | Teknis selesai, **menunggu tinjauan tenaga kesehatan** |
-| 4     | Dashboard dan laporan                | Belum                                                  |
-| 5     | PWA, hardening, deployment           | Belum                                                  |
+| Phase | Isi                                  | Status                                                  |
+| ----- | ------------------------------------ | ------------------------------------------------------- |
+| 0     | Fondasi proyek                       | Selesai                                                 |
+| 1     | Import Excel (adapter Bu Bidan)      | Selesai                                                 |
+| 2     | Data balita dan pengukuran           | Selesai                                                 |
+| 3     | Mesin antropometri (WHO + Permenkes) | Teknis selesai, **menunggu tinjauan tenaga kesehatan**  |
+| 4     | Dashboard dan laporan bulanan        | Teknis selesai; **SKDN menunggu definisi dari pemilik** |
+| 5     | PWA, hardening, deployment           | Belum                                                   |
 
 Belum dikerjakan: adapter ASP Karangtawar, layar penyelesaian konflik import, backup dan restore data, serta grafik kurva dan pemantauan tren pertumbuhan.
 

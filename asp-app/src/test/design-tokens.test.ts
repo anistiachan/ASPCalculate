@@ -295,3 +295,61 @@ describe("radius (skill: sm 4px, md 8px)", () => {
     expect(Math.max(...radii)).toBeLessThanOrEqual(0.5)
   })
 })
+
+describe("warna grafik (skill dataviz)", () => {
+  it.each(["viz-bar", "viz-under", "viz-over"])(
+    "%s terlihat di atas permukaan kartu (>= 3:1)",
+    (name) => {
+      expect(contrastRatio(token(name), token("card"))).toBeGreaterThanOrEqual(
+        NON_TEXT_MIN
+      )
+    }
+  )
+
+  it("kutub diverging berbeda jauh: biru ← → oranye tidak bisa tertukar", () => {
+    // Lolos validate_palette.js (ΔE buta warna 24,7; penglihatan normal 33,6). Di sini hanya
+    // dijaga agar keduanya tidak diganti dengan warna yang kontrasnya antar-kutub rendah.
+    expect(contrastRatio(token("viz-under"), token("viz-over"))).toBeLessThan(
+      1.6
+    )
+    expect(token("viz-under")).not.toBe(token("viz-over"))
+  })
+
+  it("abu-abu netral 'normal' sengaja redup: wajib ada tabel pendamping (aturan relief)", () => {
+    // Kontras < 3:1 itu disengaja (titik tengah harus terbaca "tidak ada apa-apa").
+    expect(contrastRatio(token("viz-normal"), token("card"))).toBeLessThan(
+      NON_TEXT_MIN
+    )
+
+    // Konsekuensinya: setiap pemakai batang diverging harus menampilkan tabel jumlahnya.
+    const bar = readFileSync(
+      join(root, "src/features/reports/components/status-distribution.tsx"),
+      "utf8"
+    )
+    expect(bar).toContain("<SegmentedBar")
+    expect(bar).toContain("<Table>")
+  })
+
+  it("grafik kolom tidak memakai Recharts dan menyediakan tabel pendamping", () => {
+    const chart = readFileSync(
+      join(root, "src/features/reports/components/weighing-trend-chart.tsx"),
+      "utf8"
+    )
+    expect(chart).not.toContain("recharts")
+    expect(chart).toContain("Lihat data sebagai tabel")
+    expect(chart).toContain("onFocus") // tooltip juga untuk keyboard
+  })
+
+  it("teks grafik memakai token teks, bukan warna data", () => {
+    const chart = readFileSync(
+      join(root, "src/features/reports/components/weighing-trend-chart.tsx"),
+      "utf8"
+    )
+    const textBlocks = chart.match(/<text[\s\S]*?<\/text>/g) ?? []
+    expect(textBlocks.length).toBeGreaterThan(0)
+    for (const block of textBlocks) {
+      expect(block).not.toMatch(/--viz-/)
+      expect(block).toMatch(/fill-(muted-foreground|foreground)/)
+    }
+  })
+})

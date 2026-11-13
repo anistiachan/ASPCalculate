@@ -16,7 +16,7 @@ type PlaceholderPageProps = {
 /** Isi sementara halaman yang belum diimplementasikan. */
 export function PlaceholderPage({ item }: PlaceholderPageProps) {
   return (
-    <div className="mx-auto w-full max-w-4xl space-y-6">
+    <div className="w-full space-y-6">
       <PageHeader item={item} />
       <Card>
         <CardHeader>

@@ -3,7 +3,7 @@
 import { Suspense, use, useMemo } from "react"
 
 import { ErrorBoundary } from "@/components/molecules/error-boundary"
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { ValidationNotice } from "@/components/molecules/validation-notice"
 import { Badge } from "@/components/ui/badge"
 import {
   Card,
@@ -27,7 +27,6 @@ import {
   type CategorySeverity,
   type NutritionCategory,
 } from "@/domain/anthropometry/classification"
-import { ANTHROPOMETRY_VALIDATED_BY_HEALTH_PROFESSIONAL } from "@/domain/anthropometry/constants"
 import { loadWho2006References } from "@/domain/anthropometry/references/load-who-2006"
 import type {
   StoredChild,
@@ -62,20 +61,6 @@ function IndicatorCell({
         {CATEGORY_LABELS[category]}
       </Badge>
     </div>
-  )
-}
-
-function ValidationNotice() {
-  if (ANTHROPOMETRY_VALIDATED_BY_HEALTH_PROFESSIONAL) return null
-  return (
-    <Alert variant="warning" role="note">
-      <AlertTitle>Hasil masih dalam tahap uji</AlertTitle>
-      <AlertDescription>
-        Perhitungan ini belum divalidasi oleh tenaga kesehatan dan tidak boleh
-        dipakai untuk keputusan layanan gizi. Pastikan hasil penting
-        dikonfirmasi dengan tenaga gizi atau kesehatan yang berwenang.
-      </AlertDescription>
-    </Alert>
   )
 }
 

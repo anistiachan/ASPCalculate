@@ -3,9 +3,35 @@ import { describe, expect, it } from "vitest"
 import {
   formatAgeMonths,
   formatDate,
+  formatMonth,
+  formatMonthShort,
   formatNumber,
+  formatPercent,
   formatShortDate,
 } from "./format"
+
+describe("formatMonth", () => {
+  it("nama bulan lengkap dan singkat dalam bahasa Indonesia", () => {
+    expect(formatMonth("2026-06")).toBe("Juni 2026")
+    expect(formatMonth("2026-12")).toBe("Desember 2026")
+    expect(formatMonthShort("2026-01")).toBe("Jan")
+    expect(formatMonthShort("2026-08")).toMatch(/^Agu/)
+  })
+})
+
+describe("formatPercent", () => {
+  it("memakai koma desimal dan maksimal satu desimal", () => {
+    expect(formatPercent(8, 9)).toBe("88,9%")
+    expect(formatPercent(1, 2)).toBe("50%")
+    expect(formatPercent(9, 9)).toBe("100%")
+    expect(formatPercent(0, 5)).toBe("0%")
+  })
+
+  it("penyebut nol menghasilkan strip, bukan 0% atau NaN", () => {
+    expect(formatPercent(0, 0)).toBe("–")
+    expect(formatPercent(3, 0)).toBe("–")
+  })
+})
 
 describe("format tanggal", () => {
   it("memformat tanggal ISO dalam bahasa Indonesia", () => {

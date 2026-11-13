@@ -189,6 +189,25 @@
   --ink-sky: #0c4a7a;
   --tint-danger: #fde3e3;
   --ink-danger: #991b1b;
+
+  /*
+   * Warna grafik (skill dataviz). Dipilih lewat validate_palette.js, bukan perasaan:
+   * - under/over: pasangan diverging biru <-> oranye untuk skala gizi
+   *   (kekurangan <- normal -> kelebihan). Lolos semua pemeriksaan: ΔE CVD 24,7 dan
+   *   penglihatan normal 33,6 (target >= 8 dan >= 15), kontras >= 3:1 di atas putih.
+   * - normal: abu-abu netral. Sengaja di luar pita lightness/chroma kategorikal (titik
+   *   tengah harus terbaca "tidak ada apa-apa"); pemisahannya dari kedua kutub lolos
+   *   (ΔE CVD 16,8; normal 22,0). Kontrasnya 1,79:1, sehingga angka WAJIB tetap terbaca lewat
+   *   tabel dan label (aturan relief) — jangan pernah memakai batang ini tanpa tabel.
+   * - bar: satu seri (jumlah), memakai warna utama aplikasi.
+   * Teks grafik memakai token teks (muted-foreground), bukan warna data.
+   */
+  --viz-bar: #0f766e;
+  --viz-under: #2a78d6;
+  --viz-normal: #c3c2b7;
+  --viz-over: #eb6834;
+  --viz-grid: #e1e0d9;
+  --viz-axis: #c3c2b7;
 }
 
 /*

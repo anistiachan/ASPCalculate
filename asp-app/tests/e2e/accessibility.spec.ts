@@ -48,6 +48,44 @@ test.describe("aksesibilitas (WCAG 2.2 AA)", () => {
     await expectNoViolations(page, "daftar kosong")
   })
 
+  test("dashboard berisi data: grafik, batang segmen, dan tooltip terbuka", async ({
+    page,
+  }) => {
+    await page.clock.setFixedTime(new Date("2026-11-13T10:00:00"))
+    await importAndSaveValidSample(page)
+    await page.goto("/dashboard")
+    await expect(page.getByRole("img", { name: /^Juni 2026:/ })).toBeVisible()
+    await expectNoViolations(page, "dashboard")
+
+    // Dengan tooltip grafik terbuka (fokus keyboard) dan tabel pendamping dibuka.
+    await page.getByRole("img", { name: /^Juni 2026:/ }).focus()
+    await page.getByText("Lihat data sebagai tabel").click()
+    await expectNoViolations(page, "dashboard dengan tooltip dan tabel terbuka")
+  })
+
+  test("laporan bulanan berisi data: tabel, batang diverging, dan pemilih bulan", async ({
+    page,
+  }) => {
+    await page.clock.setFixedTime(new Date("2026-11-13T10:00:00"))
+    await importAndSaveValidSample(page)
+    await page.goto("/reports")
+    await byLabel(page, "Bulan").selectOption({ label: "Juni" })
+    await byLabel(page, "Tahun").selectOption("2026")
+    await expect(
+      page.getByRole("heading", { name: "Rekap Juni 2026" })
+    ).toBeVisible()
+    await expect(page.getByText("9 anak dinilai.").first()).toBeVisible()
+    await expectNoViolations(page, "laporan bulanan")
+  })
+
+  test("laporan bulanan tanpa data", async ({ page }) => {
+    await page.goto("/reports")
+    await expect(
+      page.getByText("Belum ada data untuk dilaporkan")
+    ).toBeVisible()
+    await expectNoViolations(page, "laporan kosong")
+  })
+
   test("formulir tambah balita, termasuk saat ada pesan error", async ({
     page,
   }) => {

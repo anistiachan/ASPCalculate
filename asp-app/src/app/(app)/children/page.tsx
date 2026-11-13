@@ -8,7 +8,7 @@ export const metadata: Metadata = { title: "Data Balita" }
 
 export default function ChildrenPage() {
   return (
-    <div className="mx-auto w-full max-w-5xl space-y-6">
+    <div className="w-full space-y-6">
       <PageHeader
         item={getNavItem("/children")}
         description="Cari, lihat, dan kelola data balita serta riwayat pengukurannya."
