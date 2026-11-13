@@ -11,6 +11,11 @@ export type SheetSpec = {
   fields: Readonly<Record<string, readonly string[]>>
   /** Header yang dikenali tetapi sengaja tidak diimpor, supaya tidak dilaporkan sebagai tak dikenal. */
   ignoredHeaders: readonly string[]
+  /**
+   * Awalan header (sudah dinormalisasi) yang juga diabaikan, mis. kolom bantu rumus ("bantu...").
+   * Dipakai agar workbook yang kolom hitungannya ditambahkan tetap bisa diimpor tanpa peringatan.
+   */
+  ignoredHeaderPrefixes?: readonly string[]
   required: readonly string[]
 }
 
@@ -46,7 +51,12 @@ export function buildSheetTable(
   spec: SheetSpec
 ): BuildResult {
   const aliasLookup = buildAliasLookup(spec)
-  const ignored = new Set(spec.ignoredHeaders)
+  const ignoredSet = new Set(spec.ignoredHeaders)
+  const prefixes = spec.ignoredHeaderPrefixes ?? []
+  const ignored = {
+    has: (key: string) =>
+      ignoredSet.has(key) || prefixes.some((prefix) => key.startsWith(prefix)),
+  }
 
   let headerRowIndex = -1
   let bestScore = 0

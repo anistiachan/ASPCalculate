@@ -8,6 +8,24 @@ import type { SheetSpec } from "../../parsers/sheet-table"
 
 export const BIDAN_ADAPTER_ID = "bu-bidan"
 
+/**
+ * Kolom hitungan yang ditambahkan scripts/add-zscore-to-bu-bidan.ps1 ke sheet bulanan (z-score dan
+ * status gizi seperti PSG): hasil rumus Excel, bukan data masukan, jadi tidak diimpor. OpenASP
+ * menghitung ulang dengan mesinnya sendiri. Kolom bantu rumus berawalan "bantu".
+ */
+const BANTU_PREFIX = ["bantu"] as const
+const ZSCORE_COLUMNS = [
+  "jk",
+  "umurbln",
+  "ztbu",
+  "zbbu",
+  "zbbtb",
+  "statustbu",
+  "statusbbu",
+  "statusbbtb",
+  "stunting",
+] as const
+
 /** Sheet `Tambah Balita` (data induk). Header berada di baris 2. */
 export const CHILDREN_SPEC: SheetSpec = {
   fields: {
@@ -38,6 +56,7 @@ export const CHILDREN_SPEC: SheetSpec = {
     "kiabayikecil",
     "imd",
   ],
+  ignoredHeaderPrefixes: BANTU_PREFIX,
   required: ["nik", "name", "birthDate", "sex"],
 }
 
@@ -73,7 +92,8 @@ export const MEASUREMENT_SPEC: SheetSpec = {
       ])
     ),
   },
-  ignoredHeaders: [],
+  ignoredHeaders: ZSCORE_COLUMNS,
+  ignoredHeaderPrefixes: BANTU_PREFIX,
   required: ["nik", "measuredAt", "weightKg", "heightCm"],
 }
 

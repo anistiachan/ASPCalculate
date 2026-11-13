@@ -52,6 +52,11 @@ Untuk mencoba import, gunakan file contoh sintetis di [`samples/`](samples/READM
 | `npm run karangtawar:slim` | Meringkas workbook ASP Karangtawar asli (puluhan MB) agar bisa diimpor |
 | `npm run who:import`       | Mengunduh dan memvalidasi tabel referensi WHO 2006 (lihat di bawah)    |
 
+Skrip PowerShell (Windows, butuh Excel terpasang), tidak lewat `npm run`:
+
+- `scripts/add-zscore-to-bu-bidan.ps1` menambahkan kolom z-score dan status gizi (seperti sheet PSG, dengan rumus Excel otomatis) ke workbook Bu Bidan. Lihat [`../docs/OPENASP-EXCEL-ZSCORE-BU-BIDAN.md`](../docs/OPENASP-EXCEL-ZSCORE-BU-BIDAN.md).
+- `scripts/dump-bu-bidan-values.ps1` membuang nilai sel workbook ke JSON lewat Excel, untuk tes pembanding lokal `src/test/bu-bidan-zscore-compare.local.test.ts` (dilewati tanpa variabel lingkungan; memuat data pribadi, jangan di-commit).
+
 Sebelum commit, jalankan `format:check`, `typecheck`, `lint`, `test`, `build`, lalu `test:e2e`.
 
 ### Tes end-to-end

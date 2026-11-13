@@ -311,6 +311,44 @@ describe("sheet pengukuran bulanan", () => {
     )
   })
 
+  it("mengabaikan kolom z-score, status, dan bantu yang ditambahkan lewat rumus Excel", () => {
+    const sheet = monthSheet("JANUARI", [
+      {
+        NIK: NIK_A,
+        TANGGALUKUR: "2025-01-05",
+        BERAT: 11,
+        TINGGI: 81,
+        CARAUKUR: "Berdiri",
+      },
+    ])
+    const added = [
+      "JK",
+      "UMUR (bln)",
+      "Z TB/U",
+      "Z BB/U",
+      "Z BB/TB",
+      "STATUS TB/U",
+      "STATUS BB/U",
+      "STATUS BB/TB",
+      "STUNTING?",
+      "bantu_tglukur",
+      "bantu_hari",
+    ]
+    sheet.rows = sheet.rows.map((row, index) =>
+      index === 0 ? [...row, ...added] : [...row, ...added.map(() => "x")]
+    )
+    const batch = parse({ sheets: [childrenSheet([CHILD_A_ROW]), sheet] })
+    expect(
+      batch.issues.filter((issue) => issue.code === "UNKNOWN_COLUMN")
+    ).toEqual([])
+    expect(batch.measurements).toHaveLength(1)
+    expect(batch.measurements[0]).toMatchObject({
+      measuredAt: "2025-01-05",
+      weightKg: 11,
+      rawLengthHeightCm: 81,
+    })
+  })
+
   it("melaporkan kolom tidak dikenal sebagai peringatan", () => {
     const sheet = monthSheet("JANUARI", [])
     sheet.rows[0] = [...sheet.rows[0], "KOLOM_BARU"]
